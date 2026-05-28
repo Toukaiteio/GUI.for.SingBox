@@ -166,7 +166,7 @@ export const useSubscribesStore = defineStore('subscribes', () => {
     s.upload = userInfo.upload ?? 0
     s.download = userInfo.download ?? 0
     s.total = userInfo.total ?? 0
-    s.expire = userInfo.expire * 1000
+    s.expire = (userInfo.expire ?? 0) * 1000
     s.updateTime = Date.now()
     s.proxies = proxies.map(({ tag, type }) => {
       // Keep the original ID value of the proxy unchanged
