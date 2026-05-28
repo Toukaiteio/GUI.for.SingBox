@@ -10,7 +10,6 @@ import {
   WindowIsMinimised,
 } from '@/bridge'
 import {
-  Colors,
   DefaultCardColumns,
   DefaultConcurrencyLimit,
   DefaultControllerSensitivity,
@@ -168,13 +167,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
         loadLocale(lang)
       }
     },
-    color(color: Color, primary: string, secondary: string) {
-      if (color !== Color.Custom) {
-        ;({ primary, secondary } = Colors[color] ?? { primary, secondary })
-      }
-      document.documentElement.style.setProperty('--primary-color', primary)
-      document.documentElement.style.setProperty('--secondary-color', secondary)
-    },
+
     feature(
       outline: boolean,
       noAnimation: boolean,
@@ -205,7 +198,6 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
   /* Apply AppSettings */
   const onAppSettingsChange = (settings: AppSettings) => {
     applyAppSettings.theme(settings.theme)
-    applyAppSettings.color(settings.color, settings.primaryColor, settings.secondaryColor)
     applyAppSettings.lang(settings.lang)
     applyAppSettings.fontFamily(settings.fontFamily)
     applyAppSettings.feature(
@@ -262,7 +254,6 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     [
       themeMode,
       appStore.locales,
-      () => app.value.color,
       () => app.value.lang,
       () => app.value.addPluginToMenu,
     ],

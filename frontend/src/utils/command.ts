@@ -1,5 +1,5 @@
 import { RestartApp } from '@/bridge'
-import { ColorOptions, ThemeOptions } from '@/constant/app'
+import { ThemeOptions } from '@/constant/app'
 import { ModeOptions } from '@/constant/kernel'
 import { PluginTrigger, PluginTriggerEvent } from '@/enums/app'
 import useI18n from '@/lang'
@@ -149,15 +149,7 @@ export const getCommands = () => {
             handler: () => (appSettings.app.theme = theme.value),
           })),
         },
-        {
-          label: 'settings.color.name',
-          cmd: 'Color',
-          children: ColorOptions.map((color) => ({
-            label: color.label,
-            cmd: color.value,
-            handler: () => (appSettings.app.color = color.value),
-          })),
-        },
+
         {
           label: 'titlebar.reload',
           cmd: 'Reload Window',

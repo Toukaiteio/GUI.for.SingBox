@@ -1,16 +1,28 @@
 :root {
   body[theme-mode='light'] {
     .set-theme(light);
+    background-image: linear-gradient(rgba(240, 246, 252, 0.45), rgba(240, 246, 252, 0.5)), url('/imgs/default_bg_light.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 
   body[theme-mode='dark'] {
     .set-theme(dark);
+    background-image: linear-gradient(rgba(13, 27, 42, 0.4), rgba(13, 27, 42, 0.45)), url('/imgs/default_bg_dark.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 }
 
 .set-theme(@theme) {
   --color: ~'var(--color-@{theme})';
   --bg-color: ~'var(--bg-color-@{theme})';
+  --primary-color: ~'var(--primary-color-@{theme})';
+  --secondary-color: ~'var(--secondary-color-@{theme})';
 
   // Scrollbar
   --scrollbar-track-bg: ~'var(--scrollbar-track-bg-@{theme})';
@@ -36,7 +48,9 @@
 
   --btn-text-color: ~'var(--btn-text-color-@{theme})';
   --btn-text-bg: ~'var(--btn-text-bg-@{theme})';
+  --btn-text-hover-color: ~'var(--btn-text-hover-color-@{theme})';
   --btn-text-hover-bg: ~'var(--btn-text-hover-bg-@{theme})';
+  --btn-text-active-color: ~'var(--btn-text-active-color-@{theme})';
   --btn-text-active-bg: ~'var(--btn-text-active-bg-@{theme})';
 
   // Radio

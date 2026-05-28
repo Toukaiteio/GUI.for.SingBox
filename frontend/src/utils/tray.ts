@@ -6,7 +6,7 @@ import {
   ShowMainWindow,
   UpdateTrayAndMenus,
 } from '@/bridge'
-import { ColorOptions, ThemeOptions } from '@/constant/app'
+import { ThemeOptions } from '@/constant/app'
 import { ModeOptions } from '@/constant/kernel'
 import { OS } from '@/enums/app'
 import i18n from '@/lang'
@@ -285,17 +285,7 @@ const getTrayMenus = () => {
             event: () => (appSettings.app.theme = theme.value),
           })),
         },
-        {
-          type: 'item',
-          text: 'settings.color.name',
-          children: ColorOptions.map((color) => ({
-            type: 'item',
-            text: color.label,
-            checkable: true,
-            checked: appSettings.app.color === color.value,
-            event: () => (appSettings.app.color = color.value),
-          })),
-        },
+
         {
           type: 'item',
           text: 'settings.lang.name',

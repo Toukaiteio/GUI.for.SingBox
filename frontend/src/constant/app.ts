@@ -1,5 +1,4 @@
 import {
-  Color,
   ControllerCloseMode,
   Lang,
   PluginTrigger,
@@ -36,24 +35,7 @@ export const RollingReleaseDirectory = 'data/rolling-release'
 export const DefaultFontFamily =
   'system-ui, "Microsoft YaHei UI", "Source Han Sans CN", "Twemoji Mozilla", sans-serif'
 
-export const Colors = {
-  [Color.Default]: {
-    primary: 'rgb(0, 89, 214)',
-    secondary: 'rgb(5, 62, 142)',
-  },
-  [Color.Green]: {
-    primary: 'green',
-    secondary: '#025f02',
-  },
-  [Color.Purple]: {
-    primary: 'purple',
-    secondary: '#6a0f9c',
-  },
-  [Color.Custom]: {
-    primary: '#000',
-    secondary: '#000',
-  },
-}
+
 
 export const LanguageOptions = [
   { label: 'settings.lang.zh', value: Lang.ZH },
@@ -101,24 +83,7 @@ export const ThemeOptions = [
   },
 ]
 
-export const ColorOptions = [
-  {
-    label: 'settings.color.default',
-    value: Color.Default,
-  },
-  {
-    label: 'settings.color.green',
-    value: Color.Green,
-  },
-  {
-    label: 'settings.color.purple',
-    value: Color.Purple,
-  },
-  {
-    label: 'settings.color.custom',
-    value: Color.Custom,
-  },
-]
+
 
 export const WindowStateOptions = [
   { label: 'settings.windowState.normal', value: WindowStartState.Normal },

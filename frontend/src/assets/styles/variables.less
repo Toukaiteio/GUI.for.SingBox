@@ -2,119 +2,122 @@
   --x: 0px;
   --y: 0px;
 
-  --primary-color: rgb(0, 89, 214);
-  --secondary-color: rgb(5, 62, 142);
+  --primary-color-light: rgb(53, 114, 166); /* #3572a6 (blue from bow/dress) */
+  --secondary-color-light: rgb(38, 86, 128); /* #265680 (darker blue) */
+  --primary-color-dark: rgb(141, 197, 169); /* #8dc5a9 (mint green from hair) */
+  --secondary-color-dark: rgb(73, 127, 101); /* #497f65 (darker green) */
 
   // Color & BackgroundColor
   --color-light: #000;
-  --bg-color-light: rgba(246, 246, 246, 0.85);
+  --bg-color-light: transparent;
   --color-dark: #fff;
-  --bg-color-dark: rgba(0, 0, 0, 0.85);
+  --bg-color-dark: transparent;
 
   // Scrollbar
   --scrollbar-track-bg-light: rgb(220, 220, 220);
-  --scrollbar-thumb-bg-light: var(--primary-color);
+  --scrollbar-thumb-bg-light: var(--primary-color-light);
   --scrollbar-track-bg-dark: rgb(73, 73, 73);
-  --scrollbar-thumb-bg-dark: var(--primary-color);
+  --scrollbar-thumb-bg-dark: var(--primary-color-dark);
 
   // Button
   --btn-normal-color-light: #000000;
   --btn-normal-bg-light: rgb(255, 255, 255);
-  --btn-normal-hover-color-light: var(--primary-color);
-  --btn-normal-hover-border-color-light: var(--primary-color);
-  --btn-normal-active-color-light: var(--secondary-color);
-  --btn-normal-active-border-color-light: var(--secondary-color);
+  --btn-normal-hover-color-light: var(--primary-color-light);
+  --btn-normal-hover-border-color-light: var(--primary-color-light);
+  --btn-normal-active-color-light: var(--secondary-color-light);
+  --btn-normal-active-border-color-light: var(--secondary-color-light);
 
   --btn-normal-color-dark: #000000;
   --btn-normal-bg-dark: rgb(255, 255, 255);
-  --btn-normal-hover-color-dark: var(--primary-color);
-  --btn-normal-hover-border-color-dark: var(--primary-color);
-  --btn-normal-active-color-dark: var(--secondary-color);
-  --btn-normal-active-border-color-dark: var(--secondary-color);
+  --btn-normal-hover-color-dark: var(--primary-color-dark);
+  --btn-normal-hover-border-color-dark: var(--primary-color-dark);
+  --btn-normal-active-color-dark: var(--secondary-color-dark);
+  --btn-normal-active-border-color-dark: var(--secondary-color-dark);
 
   --btn-primary-color-light: rgb(255, 255, 255);
-  --btn-primary-bg-light: var(--primary-color);
-  --btn-primary-hover-bg-light: var(--secondary-color);
-  --btn-primary-active-bg-light: var(--primary-color);
+  --btn-primary-bg-light: var(--primary-color-light);
+  --btn-primary-hover-bg-light: var(--secondary-color-light);
+  --btn-primary-active-bg-light: var(--primary-color-light);
 
   --btn-primary-color-dark: rgb(255, 255, 255);
-  --btn-primary-bg-dark: var(--primary-color);
-  --btn-primary-hover-bg-dark: var(--secondary-color);
-  --btn-primary-active-bg-dark: var(--primary-color);
+  --btn-primary-bg-dark: var(--primary-color-dark);
+  --btn-primary-hover-bg-dark: var(--secondary-color-dark);
+  --btn-primary-active-bg-dark: var(--primary-color-dark);
 
-  --btn-link-color-light: var(--primary-color);
+  --btn-link-color-light: var(--primary-color-light);
   --btn-link-bg-light: transparent;
-  --btn-link-hover-color-light: var(--secondary-color);
-  --btn-link-active-color-light: var(--primary-color);
+  --btn-link-hover-color-light: var(--secondary-color-light);
+  --btn-link-active-color-light: var(--primary-color-light);
 
-  --btn-link-color-dark: var(--primary-color);
+  --btn-link-color-dark: var(--primary-color-dark);
   --btn-link-bg-dark: transparent;
-  --btn-link-hover-color-dark: var(--secondary-color);
-  --btn-link-active-color-dark: var(--primary-color);
+  --btn-link-hover-color-dark: var(--secondary-color-dark);
+  --btn-link-active-color-dark: var(--primary-color-dark);
 
   --btn-text-color-light: rgb(46, 46, 46);
   --btn-text-bg-light: transparent;
-  --btn-text-hover-bg-light: rgb(232, 232, 232);
-  --btn-text-active-bg-light: rgb(206, 206, 206);
+  --btn-text-hover-color-light: var(--primary-color-light);
+  --btn-text-hover-bg-light: rgba(53, 114, 166, 0.1);
+  --btn-text-active-color-light: var(--secondary-color-light);
+  --btn-text-active-bg-light: rgba(53, 114, 166, 0.2);
 
   --btn-text-color-dark: rgb(230, 230, 230);
   --btn-text-bg-dark: transparent;
-  --btn-text-hoer-color-dark: #222222;
+  --btn-text-hover-color-dark: var(--primary-color-dark);
   --btn-text-hover-bg-dark: rgba(255, 255, 255, 0.2);
-  --btn-text-active-color-dark: #161616;
+  --btn-text-active-color-dark: var(--secondary-color-dark);
   --btn-text-active-bg-dark: rgba(255, 255, 255, 0.4);
 
   // Radio
-  --radio-normal-color-light: #000;
-  --radio-normal-bg-light: rgba(255, 255, 255, 1);
-  --radio-normal-hover-color-light: var(--primary-color);
+  --radio-normal-color-light: #2c3e50;
+  --radio-normal-bg-light: rgba(255, 255, 255, 0.55);
+  --radio-normal-hover-color-light: var(--primary-color-light);
   --radio-primary-color-light: #fff;
-  --radio-primary-bg-light: var(--primary-color);
-  --radio-primary-hover-bg-light: var(--secondary-color);
-  --radio-primary-active-bg-light: var(--primary-color);
+  --radio-primary-bg-light: var(--primary-color-light);
+  --radio-primary-hover-bg-light: var(--secondary-color-light);
+  --radio-primary-active-bg-light: var(--primary-color-light);
 
   --radio-normal-color-dark: #ededed;
   --radio-normal-bg-dark: rgba(255, 255, 255, 0.06);
-  --radio-normal-hover-color-dark: var(--primary-color);
+  --radio-normal-hover-color-dark: var(--primary-color-dark);
   --radio-primary-color-dark: #fff;
-  --radio-primary-bg-dark: var(--primary-color);
-  --radio-primary-hover-bg-dark: var(--secondary-color);
-  --radio-primary-active-bg-dark: var(--primary-color);
+  --radio-primary-bg-dark: var(--primary-color-dark);
+  --radio-primary-hover-bg-dark: var(--secondary-color-dark);
+  --radio-primary-active-bg-dark: var(--primary-color-dark);
 
   // Card
-  --card-color-light: rgb(95, 95, 95);
-  --card-bg-light: rgba(255, 255, 255, 0.6);
-  --card-hover-bg-light: rgba(255, 255, 255, 0.6);
-  --card-active-bg-light: rgba(255, 255, 255, 0.4);
-
+  --card-color-light: rgb(44, 62, 80);
+  --card-bg-light: rgba(240, 246, 252, 0.65);
+  --card-hover-bg-light: rgba(255, 255, 255, 0.8);
+  --card-active-bg-light: rgba(255, 255, 255, 0.5);
   --card-color-dark: rgb(255, 255, 255);
-  --card-bg-dark: rgba(255, 255, 255, 0.06);
-  --card-hover-bg-dark: rgba(255, 255, 255, 0.1);
-  --card-active-bg-dark: rgba(255, 255, 255, 0.04);
+  --card-bg-dark: rgba(18, 33, 47, 0.65);
+  --card-hover-bg-dark: rgba(27, 48, 70, 0.7);
+  --card-active-bg-dark: rgba(10, 19, 29, 0.7);
 
   // Progress
   --progress-bg-light: rgba(0, 0, 0, 0.08);
-  --progress-inner-bg-light: var(--primary-color);
+  --progress-inner-bg-light: var(--primary-color-light);
 
   --progress-bg-dark: rgba(221, 221, 221, 0.08);
-  --progress-inner-bg-dark: var(--primary-color);
+  --progress-inner-bg-dark: var(--primary-color-dark);
 
   // Dropdown
-  --dropdown-bg-light: rgba(255, 255, 255, 0.8);
-  --dropdown-bg-dark: rgba(62, 62, 62, 0.8);
+  --dropdown-bg-light: rgba(240, 246, 252, 0.85);
+  --dropdown-bg-dark: rgba(18, 33, 47, 0.85);
 
   // Modal
-  --modal-bg-light: #f6f6f6;
-  --modal-mask-bg-light: rgba(255, 255, 255, 0.4);
-  --modal-bg-dark: #343434;
-  --modal-mask-bg-dark: rgba(0, 0, 0, 0.4);
+  --modal-bg-light: #e8f1f7;
+  --modal-mask-bg-light: rgba(226, 240, 251, 0.55);
+  --modal-bg-dark: #12212f;
+  --modal-mask-bg-dark: rgba(8, 18, 29, 0.6);
 
   // Switch
-  --switch-on-bg-light: var(--primary-color);
-  --switch-on-hover-bg-light: var(--secondary-color);
+  --switch-on-bg-light: var(--primary-color-light);
+  --switch-on-hover-bg-light: var(--secondary-color-light);
   --switch-on-dot-bg-light: #fff;
-  --switch-on-bg-dark: var(--primary-color);
-  --switch-on-hover-bg-dark: var(--secondary-color);
+  --switch-on-bg-dark: var(--primary-color-dark);
+  --switch-on-hover-bg-dark: var(--secondary-color-dark);
   --switch-on-dot-bg-dark: #fff;
 
   --switch-off-bg-light: rgba(0, 0, 0, 0.06);
@@ -126,13 +129,13 @@
 
   // Input
   --input-color-light: #000;
-  --input-bg-light: rgba(255, 255, 255, 1);
+  --input-bg-light: rgba(255, 255, 255, 0.8);
   --input-color-dark: #fff;
-  --input-bg-dark: rgba(255, 255, 255, 0.06);
+  --input-bg-dark: rgba(8, 18, 29, 0.45);
 
   // ColorPicker
   --color-picker-bg-light: #fff;
-  --color-picker-bg-dark: rgba(255, 255, 255, 0.06);
+  --color-picker-bg-dark: rgba(8, 18, 29, 0.45);
 
   // Divider
   --divider-color-light: #c6c6c6;
@@ -140,15 +143,15 @@
 
   // Select
   --select-bg-light: rgba(255, 255, 255, 1);
-  --select-bg-dark: rgba(255, 255, 255, 0.06);
+  --select-bg-dark: rgba(8, 18, 29, 0.45);
 
   // Toast
   --toast-bg-light: #fff;
-  --toast-bg-dark: #343434;
+  --toast-bg-dark: #12212f;
 
   // Menu
   --menu-bg-light: rgba(255, 255, 255, 0.8);
-  --menu-bg-dark: rgba(62, 62, 62, 0.8);
+  --menu-bg-dark: rgba(18, 33, 47, 0.85);
 
   // Table
   --table-tr-odd-bg-light: rgb(247, 247, 247);
