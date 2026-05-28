@@ -247,3 +247,12 @@ export function CanResolveFilePaths(): boolean;
 
 // Resolves file paths for an array of files
 export function ResolveFilePaths(files: File[]): void
+
+// Check if notifications are available on this platform
+export function IsNotificationAvailable(): Promise<boolean>;
+
+// Request notification authorization from the user
+export function RequestNotificationAuthorization(): Promise<boolean>;
+
+// Send a notification
+export function SendNotification(options: { id: string; title: string; body?: string; subtitle?: string }): Promise<void>;
