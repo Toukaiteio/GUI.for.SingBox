@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import logo from '@/assets/logo'
 import {
@@ -19,6 +20,8 @@ import type { Menu } from '@/types/app'
 
 const isPinned = ref(false)
 const isMaximised = ref(false)
+
+const { t } = useI18n()
 
 const appSettingsStore = useAppSettingsStore()
 const kernelApiStore = useKernelApiStore()
@@ -80,6 +83,16 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
       @dblclick="WindowToggleMaximise"
     >
       {{ APP_TITLE }} {{ APP_VERSION }}
+      <Tag
+        v-if="appStore.updatable && !appStore.downloading && !appStore.restartable"
+        color="primary"
+        size="small"
+        class="cursor-pointer"
+        style="--wails-draggable: disabled"
+        @click.stop="appStore.downloadApp"
+      >
+        {{ t('titlebar.newVersion') }}
+      </Tag>
       <CustomAction :actions="appStore.customActions.title_bar" />
       <Icon
         v-if="kernelApiStore.starting || kernelApiStore.stopping || kernelApiStore.restarting"

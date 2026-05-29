@@ -4,14 +4,11 @@ import { useI18n } from 'vue-i18n'
 
 import { getProxyDelay } from '@/api/kernel'
 import {
-  ControllerCloseModeOptions,
   DefaultCardColumns,
   DefaultConcurrencyLimit,
-  DefaultControllerSensitivity,
   DefaultTestTimeout,
   DefaultTestURL,
 } from '@/constant/app'
-import { ControllerCloseMode } from '@/enums/app'
 import { useBool } from '@/hooks'
 import { useAppSettingsStore, useKernelApiStore, useProfilesStore } from '@/stores'
 import {
@@ -207,8 +204,6 @@ const handleResetMoreSettings = () => {
   appSettings.app.kernel.testUrl = DefaultTestURL
   appSettings.app.kernel.testTimeout = DefaultTestTimeout
   appSettings.app.kernel.concurrencyLimit = DefaultConcurrencyLimit
-  appSettings.app.kernel.controllerCloseMode = ControllerCloseMode.All
-  appSettings.app.kernel.controllerSensitivity = DefaultControllerSensitivity
   appSettings.app.kernel.cardColumns = DefaultCardColumns
   message.success('common.success')
 }
@@ -224,7 +219,6 @@ onActivated(() => {
       class="sticky flex gap-8 items-center p-8 rounded-8 backdrop-blur-sm"
       style="background-color: var(--card-bg)"
     >
-      <Switch v-model="appSettings.app.kernel.autoClose" label="home.controller.autoClose" />
       <Switch v-model="appSettings.app.kernel.unAvailable" label="home.controller.unAvailable" />
       <Switch v-model="appSettings.app.kernel.cardMode" label="home.controller.cardMode" />
       <Switch v-model="appSettings.app.kernel.sortByDelay" label="home.controller.sortBy" />
@@ -389,29 +383,6 @@ onActivated(() => {
         type="number"
         editable
         clearable
-      />
-    </div>
-
-    <div class="form-item">
-      {{ t('home.controller.closeMode.name') }}
-      <Radio
-        v-model="appSettings.app.kernel.controllerCloseMode"
-        :options="ControllerCloseModeOptions"
-      />
-    </div>
-
-    <div
-      v-if="appSettings.app.kernel.controllerCloseMode === ControllerCloseMode.All"
-      class="form-item"
-    >
-      {{ t('home.controller.sensitivity') }}
-      <Input
-        v-model="appSettings.app.kernel.controllerSensitivity"
-        type="number"
-        :min="1"
-        :max="6"
-        placeholder="1-6"
-        editable
       />
     </div>
 

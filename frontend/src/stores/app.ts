@@ -12,8 +12,8 @@ import {
   ReadDir,
   Exec,
 } from '@/bridge'
-import { LanguageOptions, LocalesFilePath, RollingReleaseDirectory } from '@/constant/app'
-import { OS } from '@/enums/app'
+import { LanguageOptions, LocalesFilePath, RollingReleaseDirectory, GhProxyUrl } from '@/constant/app'
+import { OS, UpdateSource } from '@/enums/app'
 import { loadLocale } from '@/lang'
 import {
   APP_TITLE,
@@ -28,6 +28,7 @@ import {
 import type { CustomAction, CustomActionFn, Menu } from '@/types/app'
 
 import { useEnvStore } from './env'
+import { useAppSettingsStore } from './appSettings'
 
 export const useAppStore = defineStore('app', () => {
   const isAppExiting = ref(false)
@@ -110,6 +111,27 @@ export const useAppStore = defineStore('app', () => {
   const remoteVersion = ref(APP_VERSION)
   const updatable = computed(() => downloadUrl.value && APP_VERSION !== remoteVersion.value)
 
+  // Build [primary, fallback] URLs based on the preferred update source.
+  // GitHub URLs are proxied through the ghproxy mirror when needed.
+  const getUrlCandidates = (url: string) => {
+    const mirror = GhProxyUrl + url
+    return useAppSettingsStore().app.updateSource === UpdateSource.GhProxy
+      ? [mirror, url]
+      : [url, mirror]
+  }
+
+  const requestWithFallback = async <T>(url: string, fn: (u: string) => Promise<T>) => {
+    let lastError: unknown
+    for (const u of getUrlCandidates(url)) {
+      try {
+        return await fn(u)
+      } catch (error) {
+        lastError = error
+      }
+    }
+    throw lastError
+  }
+
   const downloadApp = async () => {
     downloading.value = true
     try {
@@ -120,16 +142,18 @@ export const useAppStore = defineStore('app', () => {
         setTimeout(() => RemoveFile(downloadCacheFile), 1000)
       })
 
-      await Download(
-        downloadUrl.value,
-        downloadCacheFile,
-        undefined,
-        (progress, total) => {
-          update(t('common.downloading') + ((progress / total) * 100).toFixed(2) + '%')
-        },
-        {
-          CancelId: downloadCacheFile,
-        },
+      await requestWithFallback(downloadUrl.value, (u) =>
+        Download(
+          u,
+          downloadCacheFile,
+          undefined,
+          (progress, total) => {
+            update(t('common.downloading') + ((progress / total) * 100).toFixed(2) + '%')
+          },
+          {
+            CancelId: downloadCacheFile,
+          },
+        ),
       ).finally(destroy)
 
       const { appName, os, appPath } = envStore.env
@@ -160,13 +184,16 @@ export const useAppStore = defineStore('app', () => {
     downloading.value = false
   }
 
-  const checkForUpdates = async (showTips = false) => {
+  const checkForUpdates = async (showTips = false, silent = false) => {
     if (checkForUpdatesLoading.value || downloading.value) return
     checkForUpdatesLoading.value = true
     remoteVersion.value = APP_VERSION
     try {
-      const { body } = await HttpGet<Record<string, any>>(APP_VERSION_API, {
-        Authorization: getGitHubApiAuthorization(),
+      const body = await requestWithFallback(APP_VERSION_API, async (u) => {
+        const { body } = await HttpGet<Record<string, any>>(u, {
+          Authorization: getGitHubApiAuthorization(),
+        })
+        return body
       })
       if (body.message) throw body.message
 
@@ -186,7 +213,7 @@ export const useAppStore = defineStore('app', () => {
       }
     } catch (error: any) {
       console.error(error)
-      message.error(error.message || error)
+      if (!silent) message.error(error.message || error)
     }
     checkForUpdatesLoading.value = false
   }

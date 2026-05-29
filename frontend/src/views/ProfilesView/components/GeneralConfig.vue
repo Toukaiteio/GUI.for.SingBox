@@ -32,7 +32,7 @@ const [showMore, toggleMore] = useBool(false)
     <template v-if="!model.log.disabled">
       <div class="form-item">
         {{ t('kernel.log.level') }}
-        <Radio v-model="model.log.level" :options="LogLevelOptions" />
+        <Select v-model="model.log.level" :options="LogLevelOptions" />
       </div>
       <div class="form-item">
         {{ t('kernel.log.output') }}

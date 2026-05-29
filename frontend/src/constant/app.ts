@@ -9,6 +9,7 @@ import {
   View,
   WebviewGpuPolicy,
   WindowStartState,
+  UpdateSource,
 } from '@/enums/app'
 import { APP_TITLE } from '@/utils'
 
@@ -66,6 +67,13 @@ export const RequestProxyModeOptions = [
   { label: 'settings.requestProxy.system', value: RequestProxyMode.System },
   { label: 'settings.requestProxy.kernel', value: RequestProxyMode.Kernel },
   { label: 'settings.requestProxy.custom', value: RequestProxyMode.Custom },
+]
+
+export const GhProxyUrl = 'https://gh-proxy.com/'
+
+export const UpdateSourceOptions = [
+  { label: 'settings.updateSource.github', value: UpdateSource.Github },
+  { label: 'settings.updateSource.ghproxy', value: UpdateSource.GhProxy },
 ]
 
 export const ThemeOptions = [

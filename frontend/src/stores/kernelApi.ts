@@ -20,7 +20,7 @@ import {
   CoreStopOutputKeyword,
   CoreWorkingDirectory,
 } from '@/constant/kernel'
-import { DefaultInboundMixed } from '@/constant/profile'
+import { DefaultInboundHttp, DefaultInboundMixed, DefaultInboundSocks } from '@/constant/profile'
 import { Branch } from '@/enums/app'
 import { Inbound, RulesetType, TunStack } from '@/enums/kernel'
 import {
@@ -170,59 +170,21 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
       inbound.enable = true
     }
 
-    const patchInboundPort = (type: 'mixed' | 'socks' | 'http', port: number) => {
-      if (!runtimeProfile) return
-      let inbound = runtimeProfile.inbounds.find((v) => v.type === type)
-      if (inbound) {
-        inbound[type]!.listen.listen_port = port
-      } else {
-        const _type = DefaultInboundMixed()!
-        _type.listen.listen_port = port
-        inbound = {
-          id: type + '-in',
-          tag: type + '-in',
-          type: type,
-          enable: true,
-          [type]: _type,
-        }
-        runtimeProfile.inbounds.push(inbound)
-      }
-      inbound.enable = port !== 0
-    }
-
-    const patchInboundAddress = (allowLan: boolean) => {
-      if (!runtimeProfile) return
-      runtimeProfile.inbounds.forEach((inbound) => {
-        if (inbound.type === Inbound.Tun) return
-        inbound[inbound.type]!.listen.listen = allowLan ? '0.0.0.0' : '127.0.0.1'
-      })
-    }
-
     const patchInboundTun = (options: {
       enable: boolean
       stack: string
       device: string
       interface_name: string
     }) => {
-      if (!runtimeProfile) return
-      const inbound = runtimeProfile.inbounds.find((v) => v.type === Inbound.Tun)
-      if (!inbound) throw 'home.overview.needTun'
-      options = { ...config.value.tun, ...options }
-      inbound.enable = options.enable
-      inbound.tun!.stack = options.stack || TunStack.Mixed
-      inbound.tun!.interface_name = options.device || ''
-      if (options.interface_name) {
-        runtimeProfile.route.default_interface = options.interface_name
-      }
-      runtimeProfile.route.auto_detect_interface = !options.interface_name
+      patchProfileTun(runtimeProfile, options)
     }
 
     const fieldHandlerMap: Recordable<() => void> = {
       inbound: () => patchInbound(),
-      http: () => patchInboundPort(Inbound.Http, value),
-      socks: () => patchInboundPort(Inbound.Socks, value),
-      mixed: () => patchInboundPort(Inbound.Mixed, value),
-      'allow-lan': () => patchInboundAddress(value),
+      http: () => patchProfileInboundPort(runtimeProfile, Inbound.Http, Number(value)),
+      socks: () => patchProfileInboundPort(runtimeProfile, Inbound.Socks, Number(value)),
+      mixed: () => patchProfileInboundPort(runtimeProfile, Inbound.Mixed, Number(value)),
+      'allow-lan': () => patchProfileInboundAddress(runtimeProfile, value),
       tun: () => patchInboundTun(value),
       'tun-stack': () => patchInboundTun(value),
       'tun-device': () => patchInboundTun(value),
@@ -231,6 +193,10 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
 
     fieldHandlerMap[field]?.()
 
+    await persistRuntimeProfileChange(field, value)
+
+    if (!running.value) return
+
     await restartCore(undefined, true)
     await envStore.updateSystemProxyStatus()
   }
@@ -238,6 +204,83 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
   const refreshProviderProxies = async () => {
     const { proxies: b } = await getProxies()
     proxies.value = b
+  }
+
+  const patchProfileInboundPort = (profile: IProfile | undefined, type: ProxyType, port: number) => {
+    if (!profile) return
+    let inbound = profile.inbounds.find((v) => v.type === type)
+    if (inbound) {
+      inbound[type]!.listen.listen_port = port
+    } else {
+      const id = type + '-in'
+      if (type === Inbound.Http) {
+        inbound = { id, tag: id, type: Inbound.Http, enable: true, http: DefaultInboundHttp() }
+      } else if (type === Inbound.Socks) {
+        inbound = { id, tag: id, type: Inbound.Socks, enable: true, socks: DefaultInboundSocks() }
+      } else {
+        inbound = { id, tag: id, type: Inbound.Mixed, enable: true, mixed: DefaultInboundMixed() }
+      }
+      profile.inbounds.push(inbound)
+    }
+    inbound[type]!.listen.listen_port = port
+    inbound.enable = port !== 0
+  }
+
+  const patchProfileInboundAddress = (profile: IProfile | undefined, allowLan: boolean) => {
+    if (!profile) return
+    profile.inbounds.forEach((inbound) => {
+      if (inbound.type === Inbound.Tun) return
+      inbound[inbound.type]!.listen.listen = allowLan ? '0.0.0.0' : '127.0.0.1'
+    })
+  }
+
+  const patchProfileTun = (
+    profile: IProfile | undefined,
+    options: { enable: boolean; stack: string; device: string; interface_name: string },
+  ) => {
+    if (!profile) return
+    const inbound = profile.inbounds.find((v) => v.type === Inbound.Tun)
+    if (!inbound) throw 'home.overview.needTun'
+    options = { ...config.value.tun, ...options }
+    inbound.enable = options.enable
+    inbound.tun!.stack = options.stack || TunStack.Mixed
+    inbound.tun!.interface_name = options.device || ''
+    if (options.interface_name) {
+      profile.route.default_interface = options.interface_name
+    }
+    profile.route.auto_detect_interface = !options.interface_name
+  }
+
+  const persistRuntimeProfileChange = async (field: string, value: any) => {
+    const currentProfile = profilesStore.currentProfile
+    if (!currentProfile) return
+
+    const idx = profilesStore.profiles.findIndex((profile) => profile.id === currentProfile.id)
+    const backup = deepClone(currentProfile)
+
+    try {
+      const fieldHandlerMap: Recordable<() => void> = {
+        http: () => patchProfileInboundPort(currentProfile, Inbound.Http, Number(value)),
+        socks: () => patchProfileInboundPort(currentProfile, Inbound.Socks, Number(value)),
+        mixed: () => patchProfileInboundPort(currentProfile, Inbound.Mixed, Number(value)),
+        'allow-lan': () => patchProfileInboundAddress(currentProfile, value),
+        tun: () => patchProfileTun(currentProfile, value),
+        'tun-stack': () => patchProfileTun(currentProfile, value),
+        'tun-device': () => patchProfileTun(currentProfile, value),
+        'interface-name': () => patchProfileTun(currentProfile, value),
+      }
+
+      const handler = fieldHandlerMap[field]
+      if (!handler) return
+
+      handler()
+      await profilesStore.saveProfiles()
+    } catch (error) {
+      if (idx !== -1) {
+        profilesStore.profiles.splice(idx, 1, backup)
+      }
+      throw error
+    }
   }
 
   /* Bridge API */

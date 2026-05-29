@@ -31,7 +31,6 @@ const kernelApiStore = useKernelApiStore()
 const pluginsStore = usePluginsStore()
 
 const menuList: Menu[] = [
-  'profile.step.name',
   'profile.step.general',
   'profile.step.inbounds',
   'profile.step.outbounds',
@@ -166,7 +165,7 @@ const generateMenus = (profile: IProfile) => {
 }
 
 const handleShowProfileForm = (id?: string, step = 0) => {
-  modalApi.setProps({ minWidth: '70' })
+  modalApi.setProps({ minWidth: '70', height: '90' })
   modalApi.setContent(ProfileForm, { id, step }).open()
 }
 

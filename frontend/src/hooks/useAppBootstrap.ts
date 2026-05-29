@@ -15,6 +15,7 @@ export const useAppBootstrap = () => {
   const hasError = ref(false)
 
   const envStore = Stores.useEnvStore()
+  const appStore = Stores.useAppStore()
   const appSettings = Stores.useAppSettingsStore()
   const profilesStore = Stores.useProfilesStore()
   const subscribesStore = Stores.useSubscribesStore()
@@ -66,6 +67,9 @@ export const useAppBootstrap = () => {
 
     const startTime = performance.now()
     percent.value = 20
+
+    // Check for updates once on startup (non-blocking, silent on failure)
+    appStore.checkForUpdates(false, true)
 
     if (await IsStartup()) {
       await pluginsStore.onStartupTrigger().catch(showError)

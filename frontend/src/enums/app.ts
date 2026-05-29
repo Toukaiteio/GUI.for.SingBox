@@ -113,3 +113,8 @@ export enum RequestMethod {
   Head = 'HEAD',
   Patch = 'PATCH',
 }
+
+export enum UpdateSource {
+  Github = 'github',
+  GhProxy = 'ghproxy',
+}

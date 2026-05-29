@@ -309,6 +309,7 @@ export default {
   },
   router: {
     overview: 'Overview',
+    nodeSelect: 'Nodes',
     subscriptions: 'Subscriptions',
     rulesets: 'Rulesets',
     plugins: 'Plugins',
@@ -353,14 +354,14 @@ export default {
       transmit: 'Transmit',
       receive: 'Receive',
       settings: 'Core Settings',
-      settingsTips:
-        'Takes effect temporarily. For persistent changes, please modify the `profile` settings.',
+      settingsTips: 'Saved to the current profile and applied after the core restarts.',
       updateGEO: 'Update GEO',
       needPort: 'Please add a Mixed/Http/Socks inbound first',
       needTun: 'Please add a TUN inbound first',
     },
     controller: {
       name: 'Controller',
+      needCore: 'Start the core before selecting nodes',
       autoClose: 'Auto-close',
       unAvailable: 'Show UnAvailable',
       cardMode: 'Card Mode',
@@ -747,6 +748,12 @@ export default {
       name: 'GitHub REST API Token',
       tips: 'Provides a higher rate limit',
     },
+    updateSource: {
+      name: 'Preferred Update Source',
+      tips: 'Used first when checking and downloading updates; falls back automatically on failure',
+      github: 'GitHub Official',
+      ghproxy: 'ghproxy Mirror',
+    },
   },
   about: {
     new: 'New',
@@ -759,6 +766,7 @@ export default {
   },
   titlebar: {
     resetSize: 'Reset Window',
+    newVersion: 'New Version',
     reload: 'Reload Window',
     restart: 'Restart App',
     exitApp: 'Exit App',

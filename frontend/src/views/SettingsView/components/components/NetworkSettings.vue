@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 
 import { HttpGet } from '@/bridge'
-import { DefaultTestTimeout, DefaultTestURL, RequestProxyModeOptions } from '@/constant/app'
+import { DefaultTestTimeout, DefaultTestURL, RequestProxyModeOptions, UpdateSourceOptions } from '@/constant/app'
 import { RequestProxyMode } from '@/enums/app'
 import { useAppSettingsStore } from '@/stores'
 import { APP_TITLE, APP_VERSION, GetRequestProxy, message, normalizeRequestProxy } from '@/utils'
@@ -135,6 +135,13 @@ const handleClearApiToken = () => {
           />
         </template>
       </Input>
+    </div>
+    <div class="px-8 py-12 flex items-center justify-between">
+      <div class="text-16 font-bold">
+        {{ $t('settings.updateSource.name') }}
+        <span class="font-normal text-12">({{ $t('settings.updateSource.tips') }})</span>
+      </div>
+      <Select v-model="appSettings.app.updateSource" :options="UpdateSourceOptions" />
     </div>
   </Card>
 </template>

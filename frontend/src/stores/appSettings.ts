@@ -30,6 +30,7 @@ import {
   ControllerCloseMode,
   Branch,
   RequestProxyMode,
+  UpdateSource,
 } from '@/enums/app'
 import i18n, { loadLocale } from '@/lang'
 import { useAppStore, useEnvStore } from '@/stores'
@@ -99,6 +100,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     },
     pluginSettings: {},
     githubApiToken: '',
+    updateSource: UpdateSource.Github,
     multipleInstance: false,
     addPluginToMenu: false,
     addGroupToMenu: false,
@@ -109,7 +111,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     debugNoRounded: false,
     debugBorder: false,
     debugUsePointer: false,
-    pages: ['Overview', 'Profiles', 'Subscriptions', 'Plugins'],
+    pages: ['Overview', 'NodeSelect', 'Profiles', 'Subscriptions', 'Plugins'],
   })
 
   const saveAppSettings = debounce((config: string) => {
@@ -150,6 +152,15 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     }
     if (settings.developerMode === undefined) {
       settings.developerMode = false
+    }
+    if (!settings.updateSource) {
+      settings.updateSource = UpdateSource.Github
+    }
+    if (!settings.pages) {
+      settings.pages = ['Overview', 'NodeSelect', 'Profiles', 'Subscriptions', 'Plugins']
+    } else if (!settings.pages.includes('NodeSelect')) {
+      const overviewIndex = settings.pages.indexOf('Overview')
+      settings.pages.splice(overviewIndex === -1 ? 0 : overviewIndex + 1, 0, 'NodeSelect')
     }
 
     app.value = settings

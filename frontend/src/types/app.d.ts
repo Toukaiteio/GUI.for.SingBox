@@ -14,6 +14,7 @@ import type {
   ScheduledTasksType,
   RequestMethod,
   OS,
+  UpdateSource,
 } from '@/enums/app'
 
 export interface AppEnv {
@@ -109,6 +110,7 @@ export interface AppSettings {
   }
   pluginSettings: Record<string, Record<string, any>>
   githubApiToken: string
+  updateSource: UpdateSource
   multipleInstance: boolean
   addPluginToMenu: boolean
   addGroupToMenu: boolean

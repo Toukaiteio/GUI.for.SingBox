@@ -1,6 +1,7 @@
 import { type RouteRecordRaw } from 'vue-router'
 
 import HomeView from '@/views/HomeView/index.vue'
+import NodeSelectView from '@/views/NodeSelectView/index.vue'
 import PluginsView from '@/views/PluginsView/index.vue'
 import ProfilesView from '@/views/ProfilesView/index.vue'
 import RulesetsView from '@/views/RulesetsView/index.vue'
@@ -16,6 +17,15 @@ const routes: RouteRecordRaw[] = [
     meta: {
       name: 'router.overview',
       icon: 'overview',
+    },
+  },
+  {
+    path: '/nodes',
+    name: 'NodeSelect',
+    component: NodeSelectView,
+    meta: {
+      name: 'router.nodeSelect',
+      icon: 'settings3',
     },
   },
   {

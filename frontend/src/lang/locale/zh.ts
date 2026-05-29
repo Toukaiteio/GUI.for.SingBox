@@ -309,6 +309,7 @@ export default {
   },
   router: {
     overview: '概览',
+    nodeSelect: '节点选择',
     subscriptions: '订阅',
     rulesets: '规则集',
     plugins: '插件',
@@ -353,13 +354,14 @@ export default {
       transmit: '上行速率',
       receive: '下行速率',
       settings: '核心设置',
-      settingsTips: '暂时生效，持久化请修改配置文件',
+      settingsTips: '会保存到当前配置并重启核心后生效',
       updateGEO: '更新 GEO',
       needPort: '请先添加一个Mixed/Http/Socks入站',
       needTun: '请先添加一个TUN入站',
     },
     controller: {
       name: '控制器',
+      needCore: '请先启动核心后选择节点',
       autoClose: '自动断开连接',
       unAvailable: '展示不可用节点',
       cardMode: '卡片模式',
@@ -746,6 +748,12 @@ export default {
       name: 'GitHub REST API 访问令牌',
       tips: '可获得更高的速率限制',
     },
+    updateSource: {
+      name: '首选更新源',
+      tips: '检查和下载更新时优先使用，失败时自动切换另一个源',
+      github: 'Github官方源',
+      ghproxy: 'ghproxy镜像',
+    },
   },
   about: {
     new: '新版本',
@@ -758,6 +766,7 @@ export default {
   },
   titlebar: {
     resetSize: '重置窗口',
+    newVersion: '有新版本',
     reload: '重载界面',
     restart: '重启程序',
     exitApp: '退出程序',
