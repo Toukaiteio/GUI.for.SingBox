@@ -81,6 +81,7 @@ func main() {
 				runtime.EventsEmit(app.Ctx, "onLaunchApp", data.Args)
 			},
 		},
+		EnableDefaultContextMenu: bridge.Config.DeveloperMode,
 		OnStartup: func(ctx context.Context) {
 			app.Ctx = ctx
 			runtime.InitializeNotifications(ctx)
@@ -100,7 +101,7 @@ func main() {
 		},
 		LogLevel: logger.INFO,
 		Debug: options.Debug{
-			OpenInspectorOnStartup: true,
+			OpenInspectorOnStartup: bridge.Config.DeveloperMode,
 		},
 	})
 

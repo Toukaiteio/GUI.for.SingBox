@@ -21,6 +21,10 @@ import {
   GetRequestProxy,
   migrateSubscribes,
 } from '@/utils'
+import {
+  isUnconvertedSubscriptionProxies,
+  normalizeSubscriptionProxies,
+} from '@/utils/nodeConvert'
 
 import type { Subscription } from '@/types/app'
 
@@ -135,11 +139,24 @@ export const useSubscribesStore = defineStore('subscribes', () => {
     }
 
     const pluginStore = usePluginsStore()
+    let nodeConvertError: unknown
+
+    try {
+      proxies = await normalizeSubscriptionProxies(proxies, s)
+    } catch (error) {
+      nodeConvertError = error
+      console.warn('Built-in node conversion failed:', error)
+    }
 
     proxies = await pluginStore.onSubscribeTrigger(proxies, s)
 
-    if (proxies.some((proxy) => proxy.name && !proxy.tag) || proxies[0]?.base64) {
-      throw 'You need to install the [节点转换] plugin first'
+    if (isUnconvertedSubscriptionProxies(proxies)) {
+      if (nodeConvertError) {
+        throw `Built-in node conversion failed: ${
+          nodeConvertError instanceof Error ? nodeConvertError.message : nodeConvertError
+        }`
+      }
+      throw 'Failed to convert subscription nodes to sing-box format'
     }
 
     if (s.type !== 'Manual') {

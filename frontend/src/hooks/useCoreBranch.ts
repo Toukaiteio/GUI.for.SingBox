@@ -256,6 +256,7 @@ export const useCoreBranch = (isAlpha = false) => {
     remoteVersion,
     remoteVersionLoading,
     downloading,
+    downloadCompleted,
     downloadProgress,
     refreshLocalVersion,
     refreshRemoteVersion,

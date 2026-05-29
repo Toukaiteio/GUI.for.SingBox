@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import { ExitApp } from '@/bridge'
+import { useModal } from '@/components/Modal'
 import { WebviewGpuPolicyOptions, WindowStateOptions } from '@/constant/app'
 import { OS } from '@/enums/app'
 import { useAppSettingsStore, useEnvStore } from '@/stores'
@@ -16,11 +17,25 @@ import {
   DisableAutoStart,
 } from '@/utils'
 
+import CommonController from '@/views/HomeView/components/CommonController.vue'
+
 const appSettings = useAppSettingsStore()
 const envStore = useEnvStore()
 
 const isAdmin = ref(false)
 const isAutoStart = ref(false)
+const [Modal, modalApi] = useModal({})
+
+const handleShowCoreSettings = () => {
+  modalApi.setProps({
+    title: 'home.overview.settings',
+    cancelText: 'common.close',
+    width: '90',
+    submit: false,
+    maskClosable: true,
+  })
+  modalApi.setContent(CommonController).open()
+}
 
 const restartApp = async (admin = false) => {
   if (admin) {
@@ -83,6 +98,15 @@ if (envStore.env.os === OS.Windows) {
   <div class="px-8 py-12 text-18 font-bold">{{ $t('settings.behavior') }}</div>
 
   <Card>
+    <div class="px-8 py-12 flex items-center justify-between">
+      <div class="text-16 font-bold">
+        {{ $t('settings.systemProxyPorts.name') }}
+        <span class="font-normal text-12">({{ $t('settings.systemProxyPorts.tips') }})</span>
+      </div>
+      <Button type="primary" @click="handleShowCoreSettings">
+        {{ $t('common.edit') }}
+      </Button>
+    </div>
     <div v-platform="[OS.Windows]" class="px-8 py-12 flex items-center justify-between">
       <div class="text-16 font-bold">
         {{ $t('settings.admin') }}
@@ -183,4 +207,6 @@ if (envStore.env.os === OS.Windows) {
       <Switch v-model="appSettings.app.addGroupToMenu" />
     </div>
   </Card>
+
+  <Modal />
 </template>

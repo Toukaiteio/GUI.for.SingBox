@@ -38,11 +38,13 @@ export default {
     uninstall: '卸载',
     run: '运行',
     refresh: '刷新',
+    retry: '重试',
     confirm: '确定',
     selectAll: '全选',
     http: '远程下载',
     file: '本地文件',
     openFile: '打开文件',
+    open: '打开',
     develop: '开发',
     canceled: '已取消',
     downloading: '下载中...',
@@ -315,6 +317,13 @@ export default {
     profiles: '配置',
     kernel: '核心',
     scheduledtasks: '计划任务',
+  },
+  nodeConvert: {
+    dependencyFailed: {
+      title: '节点转换依赖下载失败',
+      message:
+        '内置节点转换需要下载 `proxy-utils.esm.mjs`，但当前下载或加载失败。\n\n原因：{reason}\n\n请检查网络或请求代理设置后重试。',
+    },
   },
   home: {
     mode: '代理模式',
@@ -651,6 +660,10 @@ export default {
     exitOnClose: '关闭窗口时退出程序',
     closeKernelOnExit: '程序退出时关闭核心',
     autoSetSystemProxy: '自动配置系统代理',
+    systemProxyPorts: {
+      name: '系统代理监听端口',
+      tips: '当前配置的入站端口',
+    },
     requestProxy: {
       name: '请求代理',
       none: '不使用代理',
@@ -676,6 +689,10 @@ export default {
     contentProtection: '窗口内容保护',
     contentProtectionTips: '防止屏幕录制/共享软件捕获窗口内容(重启生效)',
     rollingRelease: '启用滚动发行',
+    developerMode: {
+      name: '开发者模式',
+      tips: '启动时尝试自动打开开发者工具，也可按 Ctrl+Shift+F12 打开',
+    },
     debugOutline: '组件轮廓',
     debugNoAnimation: '禁用动画',
     debugNoRounded: '禁用圆角',
@@ -703,6 +720,13 @@ export default {
       rollbackTip: '回滚到上一版本',
       rollback: '确定回滚到上一版本吗？',
       clearCache: '清除缓存',
+      installPrompt: {
+        title: '安装 sing-box 核心',
+        description: '未检测到已安装的核心。请选择一个核心安装，或暂时跳过。',
+        installStable: '安装 sing-box',
+        installAlpha: '安装 Alpha',
+        skip: '暂时跳过',
+      },
       config: {
         name: '运行时配置',
         env: '环境变量',

@@ -12,7 +12,7 @@ import {
   initWebsocket,
   destroyWebsocket,
 } from '@/api/kernel'
-import { ProcessInfo, KillProcess, ExecBackground, ReadFile, RemoveFile } from '@/bridge'
+import { ProcessInfo, KillProcess, ExecBackground, ReadFile, RemoveFile, FileExists } from '@/bridge'
 import {
   CoreConfigFilePath,
   CoreLogFilePath,
@@ -239,7 +239,8 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
   let isCoreStartedByThisInstance = false
   let { promise: coreStoppedPromise, resolve: coreStoppedResolver } = Promise.withResolvers()
 
-  const initCoreState = async () => {
+  const initCoreState = async (options: { autoStart?: boolean } = {}) => {
+    const { autoStart = true } = options
     corePid.value = Number(await ReadFile(CorePidFilePath).catch(() => -1))
     const processName = corePid.value === -1 ? '' : await ProcessInfo(corePid.value).catch(() => '')
     running.value = processName.startsWith('sing-box')
@@ -250,7 +251,12 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
       initWebsocket()
       await Promise.all([refreshConfig(), refreshProviderProxies()])
       await envStore.updateSystemProxyStatus()
-    } else if (appSettingsStore.app.autoStartKernel) {
+    } else if (autoStart && appSettingsStore.app.autoStartKernel) {
+      const isAlpha = appSettingsStore.app.kernel.branch === Branch.Alpha
+      const coreInstalled = await FileExists(
+        `${CoreWorkingDirectory}/${getKernelFileName(isAlpha)}`,
+      ).catch(() => false)
+      if (!coreInstalled) return
       await startCore()
     }
   }

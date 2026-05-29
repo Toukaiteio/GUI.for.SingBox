@@ -1,3 +1,8 @@
+export {
+  IsNotificationAvailable,
+  RequestNotificationAuthorization,
+  SendNotification,
+} from './app'
 export * from '@wails/runtime/runtime'
 export * from './io'
 export * from './net'

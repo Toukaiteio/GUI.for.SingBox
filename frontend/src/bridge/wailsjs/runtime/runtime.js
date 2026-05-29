@@ -236,15 +236,3 @@ export function CanResolveFilePaths() {
 export function ResolveFilePaths(files) {
     return window.runtime.ResolveFilePaths(files);
 }
-
-export function IsNotificationAvailable() {
-    return window.runtime.IsNotificationAvailable();
-}
-
-export function RequestNotificationAuthorization() {
-    return window.runtime.RequestNotificationAuthorization();
-}
-
-export function SendNotification(options) {
-    return window.runtime.SendNotification(options);
-}

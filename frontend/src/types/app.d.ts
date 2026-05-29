@@ -113,6 +113,7 @@ export interface AppSettings {
   addPluginToMenu: boolean
   addGroupToMenu: boolean
   rollingRelease: boolean
+  developerMode: boolean
   debugOutline: boolean
   debugNoAnimation: boolean
   debugNoRounded: false

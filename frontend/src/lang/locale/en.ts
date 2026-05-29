@@ -38,11 +38,13 @@ export default {
     uninstall: 'Uninstall',
     run: 'Run',
     refresh: 'Refresh',
+    retry: 'Retry',
     confirm: 'OK',
     selectAll: 'Select All',
     http: 'Remote',
     file: 'Local',
     openFile: 'Open File',
+    open: 'Open',
     develop: 'Develop',
     canceled: 'Canceled',
     downloading: 'Downloading...',
@@ -315,6 +317,13 @@ export default {
     profiles: 'Profiles',
     kernel: 'Core',
     scheduledtasks: 'Tasks',
+  },
+  nodeConvert: {
+    dependencyFailed: {
+      title: 'Node conversion dependency failed',
+      message:
+        'Built-in node conversion needs to download `proxy-utils.esm.mjs`, but the download or load failed.\n\nReason: {reason}\n\nCheck your network or request proxy settings, then retry.',
+    },
   },
   home: {
     mode: 'Proxy Mode',
@@ -652,6 +661,10 @@ export default {
     exitOnClose: 'Exit on window close',
     closeKernelOnExit: 'Stop core on exit',
     autoSetSystemProxy: 'Auto-configure System Proxy',
+    systemProxyPorts: {
+      name: 'System proxy listen ports',
+      tips: 'Inbound ports of the current profile',
+    },
     requestProxy: {
       name: 'Request Proxy',
       none: 'No proxy',
@@ -677,6 +690,10 @@ export default {
     contentProtection: 'Content Protection',
     contentProtectionTips: 'Blocks screen capture (Restart Required)',
     rollingRelease: 'Enable Rolling Release',
+    developerMode: {
+      name: 'Developer mode',
+      tips: 'Try to open DevTools on startup, or press Ctrl+Shift+F12',
+    },
     debugOutline: 'Show component outlines',
     debugNoAnimation: 'Disable animations',
     debugNoRounded: 'Disable rounded corners',
@@ -704,6 +721,13 @@ export default {
       rollbackTip: 'Rollback to the previous version',
       rollback: 'Are you sure you want to roll back to the previous version?',
       clearCache: 'Clear Cache',
+      installPrompt: {
+        title: 'Install sing-box core',
+        description: 'No installed core was detected. Install a core now or skip for this session.',
+        installStable: 'Install sing-box',
+        installAlpha: 'Install Alpha',
+        skip: 'Skip for now',
+      },
       config: {
         name: 'Runtime Configuration',
         env: 'Environment Variables',

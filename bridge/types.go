@@ -86,6 +86,7 @@ type AppConfig struct {
 	Height            int  `yaml:"height"`
 	MultipleInstance  bool `yaml:"multipleInstance"`
 	RollingRelease    bool `yaml:"rollingRelease" default:"true"`
+	DeveloperMode     bool `yaml:"developerMode"`
 	StartHidden       bool
 }
 

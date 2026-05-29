@@ -103,6 +103,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     addPluginToMenu: false,
     addGroupToMenu: false,
     rollingRelease: true,
+    developerMode: false,
     debugOutline: false,
     debugNoAnimation: false,
     debugNoRounded: false,
@@ -146,6 +147,9 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     }
     if (settings.debugUsePointer === undefined) {
       settings.debugUsePointer = false
+    }
+    if (settings.developerMode === undefined) {
+      settings.developerMode = false
     }
 
     app.value = settings
@@ -228,9 +232,11 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
   })
   const setAppTheme = (theme: Theme.Dark | Theme.Light) => {
     if (document.startViewTransition) {
-      document.startViewTransition(() => {
+      const transition = document.startViewTransition(() => {
         document.body.setAttribute('theme-mode', theme)
       })
+      transition.ready.catch(() => {})
+      transition.finished.catch(() => {})
     } else {
       document.body.setAttribute('theme-mode', theme)
     }
