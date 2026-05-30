@@ -229,14 +229,15 @@ const onSortUpdate = debounce(profilesStore.saveProfiles, 1000)
 
   <div
     v-draggable="[profilesStore.profiles, { ...DraggableOptions, onUpdate: onSortUpdate }]"
-    :class="'grid-list-' + appSettingsStore.app.profilesView"
+    :class="['grid-list-' + appSettingsStore.app.profilesView, 'profiles-list-container']"
   >
     <Card
-      v-for="p in profilesStore.profiles"
+      v-for="(p, i) in profilesStore.profiles"
       :key="p.id"
       v-menu="generateMenus(p)"
       :title="p.name"
       :selected="appSettingsStore.app.kernel.profile === p.id"
+      :style="{ '--i': i }"
       class="grid-list-item"
       @dblclick="handleUseProfile(p)"
     >

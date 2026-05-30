@@ -20,7 +20,10 @@ const hasTitle = computed(() => {
 </script>
 
 <template>
-  <div class="gui-card rounded-8 relative flex flex-col">
+  <div
+    class="gui-card rounded-8 relative flex flex-col"
+    :class="{ 'card-selected': selected, 'card-disabled': disabled }"
+  >
     <div v-if="hasTitle" class="card-header flex items-center break-all p-8">
       <slot name="title-prefix"></slot>
       <div v-if="title" v-tips="title" class="card-header_title line-clamp-1 text-16 font-bold">

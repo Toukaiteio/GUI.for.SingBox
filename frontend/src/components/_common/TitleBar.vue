@@ -71,7 +71,11 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 </script>
 
 <template>
-  <div v-menu="menus" class="flex items-center py-8 gap-8 px-12" style="--wails-draggable: drag">
+  <div
+    v-menu="menus"
+    class="hypr-bar flex items-center py-8 gap-8 px-16"
+    style="--wails-draggable: drag"
+  >
     <img v-if="!isDarwin" class="w-24 h-24" draggable="false" :src="logo" />
 
     <div

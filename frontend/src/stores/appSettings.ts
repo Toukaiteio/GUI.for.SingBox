@@ -165,6 +165,10 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
 
     app.value = settings
     latestUserSettings = stringify(app.value)
+
+    setTimeout(() => {
+      isFirstThemeLoad = false
+    }, 200)
   }
 
   const applyAppSettings = {
@@ -234,15 +238,28 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
   watch(app, onAppSettingsChange, { deep: true })
 
   /* Apply AppTheme */
-  const themeMode = ref<Theme.Light | Theme.Dark>(Theme.Light)
   const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)')
+  const getInitialTheme = (): Theme.Light | Theme.Dark => {
+    try {
+      const stored = localStorage.getItem('theme-mode')
+      if (stored === Theme.Dark || stored === Theme.Light) {
+        return stored as Theme.Light | Theme.Dark
+      }
+    } catch {}
+    return mediaQueryList.matches ? Theme.Dark : Theme.Light
+  }
+  const themeMode = ref<Theme.Light | Theme.Dark>(getInitialTheme())
   mediaQueryList.addEventListener('change', ({ matches }) => {
     if (app.value.theme === Theme.Auto) {
       themeMode.value = matches ? Theme.Dark : Theme.Light
     }
   })
+  let isFirstThemeLoad = true
   const setAppTheme = (theme: Theme.Dark | Theme.Light) => {
-    if (document.startViewTransition) {
+    try {
+      localStorage.setItem('theme-mode', theme)
+    } catch {}
+    if (document.startViewTransition && !isFirstThemeLoad) {
       const transition = document.startViewTransition(() => {
         document.body.setAttribute('theme-mode', theme)
       })

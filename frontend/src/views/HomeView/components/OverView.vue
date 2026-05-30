@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ProcessMemory } from '@/bridge'
@@ -30,6 +30,45 @@ const appStore = useAppStore()
 const envStore = useEnvStore()
 const appSettings = useAppSettingsStore()
 const kernelApiStore = useKernelApiStore()
+
+// Sliding background logic for Mode Selector
+const modeRefs = ref<any[]>([])
+const activeBgStyle = ref({
+  transform: 'translateY(0)',
+  height: '0px',
+  opacity: 0,
+})
+
+const updateActiveBg = () => {
+  const activeIndex = ModeOptions.findIndex(m => m.value === kernelApiStore.config.mode)
+  if (activeIndex === -1) {
+    activeBgStyle.value.opacity = 0
+    return
+  }
+  const el = modeRefs.value[activeIndex]
+  if (el) {
+    const domEl = el.$el || el
+    activeBgStyle.value = {
+      transform: `translateY(${domEl.offsetTop}px)`,
+      height: `${domEl.offsetHeight}px`,
+      opacity: 1,
+    }
+  }
+}
+
+watch(() => kernelApiStore.config.mode, () => {
+  nextTick(updateActiveBg)
+})
+
+onMounted(() => {
+  setTimeout(updateActiveBg, 150) // Small delay to ensure layout has computed
+  window.addEventListener('resize', updateActiveBg)
+})
+
+const modeIcon = (v: string) =>
+  (({ global: 'overview', rule: 'rulesets', direct: 'forward' }) as any)[v] || 'sparkle'
+const modeNeon = (v: string) =>
+  (({ global: 'neon-cyan', rule: 'neon-purple', direct: 'neon-blue' }) as any)[v] || 'neon-cyan'
 
 const handleRestartKernel = async () => {
   try {
@@ -151,32 +190,30 @@ onUnmounted(() => {
   unregisterMemoryHandler()
   unregisterTrafficHandler()
   unregisterConnectionsHandler()
+  window.removeEventListener('resize', updateActiveBg)
 })
 </script>
 
 <template>
   <div>
-    <div class="flex items-center rounded-8 px-8 py-4" style="background-color: var(--card-bg)">
-      <Button type="text" size="small" icon="settings" @click="handleShowSettings" />
-      <Switch
-        v-model="envStore.systemProxy"
+    <div class="flex items-center px-4 py-8 border-b border-white border-opacity-10 mb-16 hypr-stat-item" style="--i:0">
+      <Button
+        :type="envStore.systemProxy ? 'primary' : 'text'"
         size="small"
-        border="square"
-        class="ml-4"
-        @change="onSystemProxySwitchChange"
+        class="px-12 py-6 rounded-6 font-bold"
+        @click="onSystemProxySwitchChange(!envStore.systemProxy)"
       >
         {{ t('home.overview.systemProxy') }}
-      </Switch>
-      <Switch
-        v-model="kernelApiStore.config.tun.enable"
+      </Button>
+      <Button
+        :type="kernelApiStore.config.tun.enable ? 'primary' : 'text'"
         size="small"
-        border="square"
-        class="ml-8"
-        @change="onTunSwitchChange"
+        class="ml-8 px-12 py-6 rounded-6 font-bold"
+        @click="onTunSwitchChange(!kernelApiStore.config.tun.enable)"
       >
         {{ t('home.overview.tunMode') }}
-      </Switch>
-      <CustomAction :actions="appStore.customActions.core_state" />
+      </Button>
+      <CustomAction :actions="appStore.customActions.core_state" class="ml-4" />
       <Button
         v-tips="'home.overview.viewlog'"
         type="text"
@@ -191,76 +228,131 @@ onUnmounted(() => {
         type="text"
         size="small"
         icon="restart"
+        class="ml-4"
         @click="handleRestartKernel"
       />
-      <Button
-        v-tips="'home.overview.stop'"
-        :loading="kernelApiStore.stopping"
-        type="text"
-        size="small"
-        icon="stop"
-        @click="handleStopKernel"
-      />
     </div>
-    <div class="flex mt-20 gap-12">
-      <Card :title="t('home.overview.realtimeTraffic')" class="flex-1">
-        <div class="py-8 text-12">
-          ↑ {{ formatBytes(statistics.upload) }}/s ↓ {{ formatBytes(statistics.download) }}/s
+    
+    <div class="flex gap-16 mt-16 items-start">
+      <!-- Left Column: Chart on Top, Stats Grid on Bottom -->
+      <div class="flex flex-col gap-16" style="flex: 1.7 1 0%; min-width: 0">
+        
+        <!-- Traffic History Chart (置顶) -->
+        <div class="p-8 hypr-stat-item" style="--i:1">
+          <TrafficChart
+            :series="trafficHistory"
+            :legend="[t('home.overview.transmit'), t('home.overview.receive')]"
+          />
         </div>
-      </Card>
-      <Card :title="t('home.overview.totalTraffic')" class="flex-1">
-        <div class="py-8 text-12">
-          ↑ {{ formatBytes(statistics.uploadTotal) }} ↓ {{ formatBytes(statistics.downloadTotal) }}
+
+        <div class="h-1 bg-white opacity-10 mx-8"></div>
+
+        <!-- Stats Grid (Symmetric 2x3 Grid below Chart, borderless) -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-16 p-8">
+          <!-- Upload Speed -->
+          <div class="flex items-center gap-12 hypr-stat-item" style="--i:0">
+            <div class="stat-badge">
+              <Icon icon="arrowDown" class="rotate-180" :size="20" color="var(--primary-color)" />
+            </div>
+            <div>
+              <div class="stat-label">{{ t('home.overview.transmit') }}</div>
+              <div class="stat-value text-22">{{ formatBytes(statistics.upload) }}/s</div>
+            </div>
+          </div>
+
+          <!-- Download Speed -->
+          <div class="flex items-center gap-12 hypr-stat-item" style="--i:1">
+            <div class="stat-badge">
+              <Icon icon="arrowDown" :size="20" color="var(--primary-color)" />
+            </div>
+            <div>
+              <div class="stat-label">{{ t('home.overview.receive') }}</div>
+              <div class="stat-value text-22">{{ formatBytes(statistics.download) }}/s</div>
+            </div>
+          </div>
+
+          <!-- Total Traffic -->
+          <div class="flex items-center gap-12 hypr-stat-item" style="--i:2">
+            <div class="stat-badge">
+              <Icon icon="subscriptions" :size="20" color="var(--primary-color)" />
+            </div>
+            <div>
+              <div class="stat-label">{{ t('home.overview.totalTraffic') }}</div>
+              <div class="stat-value text-22">
+                {{ formatBytes(statistics.uploadTotal + statistics.downloadTotal) }}
+              </div>
+              <div class="text-12 mt-2" style="opacity: 0.5">
+                ↑ {{ formatBytes(statistics.uploadTotal) }} ↓ {{ formatBytes(statistics.downloadTotal) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Connections -->
+          <div class="flex items-center gap-12 cursor-pointer hover:opacity-80 transition hypr-stat-item" style="--i:3" @click="handleShowApiConnections">
+            <div class="stat-badge">
+              <Icon icon="link" :size="20" color="var(--primary-color)" />
+            </div>
+            <div>
+              <div class="stat-label">{{ t('home.overview.connections') }}</div>
+              <div class="stat-value text-22">{{ statistics.connections.length }}</div>
+            </div>
+          </div>
+
+          <!-- Memory -->
+          <div class="flex items-center gap-12 cursor-pointer hover:opacity-80 transition hypr-stat-item" style="--i:4" @click="handleToggleRealMemoryUsage">
+            <div class="stat-badge">
+              <Icon icon="plugins" :size="20" color="var(--primary-color)" />
+            </div>
+            <div>
+              <div class="stat-label">{{ t('home.overview.memory') }}</div>
+              <div class="stat-value text-22">
+                {{ formatBytes(statistics.inuse) }}
+              </div>
+              <div v-if="appSettings.app.kernel.realMemoryUsage" class="text-12 mt-2" style="opacity: 0.5">
+                / {{ formatBytes(statistics.memUsage) }}
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
-      <Card
-        :title="t('home.overview.connections')"
-        class="flex-1 cursor-pointer"
-        @click="handleShowApiConnections"
-      >
-        <div class="py-8 text-12">
-          {{ statistics.connections.length }}
-        </div>
-      </Card>
-      <Card
-        :title="t('home.overview.memory')"
-        class="flex-1 cursor-pointer"
-        @click="handleToggleRealMemoryUsage"
-      >
-        <div class="py-8 text-12">
-          {{ formatBytes(statistics.inuse) }}
-          <span v-if="appSettings.app.kernel.realMemoryUsage">
-            / ({{ formatBytes(statistics.memUsage) }})
-          </span>
-        </div>
-      </Card>
-    </div>
-    <div class="flex">
-      <div class="w-[60%]">
-        <div class="py-16 font-bold" style="color: var(--card-color)">
-          {{ t('home.overview.traffic') }}
-        </div>
-        <TrafficChart
-          :series="trafficHistory"
-          :legend="[t('home.overview.transmit'), t('home.overview.receive')]"
-        />
       </div>
-      <div class="ml-12 flex-1">
-        <div class="py-16 font-bold" style="color: var(--card-color)">
+
+      <!-- Right Column: Mode Menu (Flat) -->
+      <div class="flex flex-col gap-12 relative" style="flex: 1 1 0%; min-width: 0">
+        <div class="font-bold px-4 py-4" style="color: var(--card-color)">
           {{ t('kernel.mode') }}
         </div>
-        <div class="flex flex-col gap-12">
-          <Card
-            v-for="mode in ModeOptions"
-            :key="mode.value"
-            :selected="kernelApiStore.config.mode === mode.value"
-            :title="t(mode.label)"
-            class="cursor-pointer"
-            @click="handleChangeMode(mode.value as any)"
-          >
-            <div class="text-12 py-2">{{ t(mode.desc) }}</div>
-          </Card>
-        </div>
+        <!-- Sliding active background indicator -->
+        <div
+          class="absolute left-0 w-full pointer-events-none"
+          :style="{
+            transform: activeBgStyle.transform,
+            height: activeBgStyle.height,
+            opacity: activeBgStyle.opacity,
+            borderLeft: '3px solid var(--primary-color)',
+            backgroundColor: 'color-mix(in srgb, var(--primary-color) 12%, transparent)',
+            transition: 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.3s, opacity 0.3s'
+          }"
+        ></div>
+        <Card
+          v-for="(mode, index) in ModeOptions"
+          :key="mode.value"
+          :ref="el => { if (el) modeRefs[index] = el }"
+          :selected="kernelApiStore.config.mode === mode.value"
+          :style="{ '--i': index + 2 }"
+          :title="t(mode.label)"
+          :class="[
+            'mode-card cursor-pointer',
+            { 'mode-active': kernelApiStore.config.mode === mode.value },
+          ]"
+          @click="handleChangeMode(mode.value as any)"
+        >
+          <template #title-prefix>
+            <div class="stat-badge mr-8">
+              <Icon :icon="modeIcon(mode.value)" :size="18" color="var(--primary-color)" />
+            </div>
+          </template>
+          <div class="text-12 py-2" style="opacity: 0.65">{{ t(mode.desc) }}</div>
+        </Card>
       </div>
     </div>
   </div>

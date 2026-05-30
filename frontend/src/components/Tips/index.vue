@@ -21,14 +21,14 @@ const { t } = useI18n()
 watch(
   () => props.position,
   ({ x, y }) => {
-    if (!fixedPosition.value.x && !fixedPosition.value.y) {
-      fixedPosition.value = { x, y }
-    }
     nextTick(() => {
       if (domRef.value) {
-        x = x - domRef.value.offsetWidth / 2
-        y -= domRef.value.offsetHeight * 2
-        fixedPosition.value = { x, y }
+        const w = domRef.value.offsetWidth
+        const h = domRef.value.offsetHeight
+        // place above cursor, centered horizontally, clamped to viewport
+        const px = Math.min(Math.max(x - w / 2, 4), window.innerWidth - w - 4)
+        const py = y - h - 8
+        fixedPosition.value = { x: px, y: py }
       }
     })
   },

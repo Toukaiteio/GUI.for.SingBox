@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onActivated } from 'vue'
+import { ref, computed, onActivated, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { getProxyDelay } from '@/api/kernel'
@@ -23,6 +23,7 @@ import {
 const expandedSet = ref<Set<string>>(new Set())
 const loadingSet = ref<Set<string>>(new Set())
 const filterKeywordsMap = ref<Record<string, string>>({})
+const hasEntered = ref(false)
 
 const loading = ref(false)
 
@@ -170,9 +171,24 @@ const handleProxyDelay = async (proxy: string) => {
     const _proxy = kernelApiStore.proxies[proxy]
     _proxy && _proxy.history.push({ delay })
   } catch (error: any) {
+    const _proxy = kernelApiStore.proxies[proxy]
+    _proxy && _proxy.history.push({ delay: 0 })
     message.error(error + ': ' + proxy)
   }
   loadingSet.value.delete(proxy)
+}
+
+const delayLevelClass = (delay = 0) => {
+  if (delay === 0) return 'level-0'
+  if (delay < 500) return 'level-1'
+  if (delay < 1000) return 'level-2'
+  if (delay < 1500) return 'level-3'
+  return 'level-4'
+}
+
+const formatDelay = (delay = 0) => {
+  if (delay === 0) return 'N/A'
+  return `${delay}ms`
 }
 
 const handleRefresh = async () => {
@@ -208,7 +224,19 @@ const handleResetMoreSettings = () => {
   message.success('common.success')
 }
 
+let enterTimer: ReturnType<typeof setTimeout>
+const playHeaderEnter = () => {
+  hasEntered.value = false
+  clearTimeout(enterTimer)
+  enterTimer = setTimeout(() => {
+    hasEntered.value = true
+  }, 800)
+}
+
+onMounted(playHeaderEnter)
+
 onActivated(() => {
+  playHeaderEnter()
   kernelApiStore.refreshProviderProxies()
 })
 </script>
@@ -241,8 +269,10 @@ onActivated(() => {
       </div>
     </div>
   </div>
-  <div v-for="group in groups" :key="group.name" class="m-8">
+  <div v-for="(group, i) in groups" :key="group.name" class="m-8">
     <div
+      :class="{ 'group-header-enter': !hasEntered }"
+      :style="!hasEntered ? { '--i': i } : {}"
       class="sticky z-2 flex gap-8 items-center p-8 rounded-8 backdrop-blur-sm"
       style="top: 52px; background-color: var(--card-bg)"
       @click="toggleExpanded(group.name)"
@@ -293,34 +323,43 @@ onActivated(() => {
       </div>
     </div>
     <Transition name="expand">
-      <div v-if="isExpanded(group.name)" class="py-8 px-4">
-        <Empty v-if="group.all.length === 0" />
-        <div
-          v-else-if="appSettings.app.kernel.cardMode"
-          :class="`grid-cols-${appSettings.app.kernel.cardColumns}`"
-          class="grid gap-8"
-        >
+      <div v-if="isExpanded(group.name)" class="expand-wrapper">
+        <div class="py-8 px-4">
+          <Empty v-if="group.all.length === 0" />
+          <div
+            v-else-if="appSettings.app.kernel.cardMode"
+            class="proxy-grid"
+            :style="{ '--card-cols': appSettings.app.kernel.cardColumns }"
+          >
           <Card
-            v-for="proxy in group.all"
+            v-for="(proxy, pi) in group.all"
             :key="proxy.name"
             :title="proxy.name"
             :selected="proxy.name === group.now"
+            :style="{ '--i': pi }"
             class="cursor-pointer"
+            :class="{ 'card-selected': proxy.name === group.now }"
             @click="useProxyWithCatchError(group, proxy)"
           >
-            <Button
-              :style="{ color: delayColor(proxy.delay) }"
-              :loading="isLoading(proxy.name)"
-              type="text"
-              size="small"
-              style="margin-left: -2px; padding-left: 2px"
-              @click.stop="handleProxyDelay(proxy.name)"
-            >
-              <div class="text-12">
-                {{ proxy.delay && proxy.delay + 'ms' }}
+            <template #extra>
+              <div
+                v-tips="t('home.overview.delayTest')"
+                class="latency-pill"
+                :class="[
+                  delayLevelClass(proxy.delay),
+                  isLoading(proxy.name) ? 'is-loading' : ''
+                ]"
+                @click.stop="handleProxyDelay(proxy.name)"
+              >
+                <Icon v-if="isLoading(proxy.name)" icon="loading" :size="10" class="rotation" />
+                <Icon v-else icon="speedTest" :size="10" class="pill-hover-icon transition-all duration-300" />
+                <span>{{ formatDelay(proxy.delay) }}</span>
               </div>
-            </Button>
-            <div class="text-12 my-2">{{ proxy.type }} {{ proxy.udp ? ':: udp' : '' }}</div>
+            </template>
+            <div class="proxy-info text-12 my-2">
+              <span class="proxy-type">{{ proxy.type }}</span>
+              <span v-if="proxy.udp" class="proxy-tag udp">UDP</span>
+            </div>
           </Card>
         </div>
         <div v-else class="grid grid-cols-32 gap-8">
@@ -335,6 +374,7 @@ onActivated(() => {
           >
             <Icon v-if="isLoading(proxy.name)" icon="loading" :size="12" class="rotation" />
           </div>
+        </div>
         </div>
       </div>
     </Transition>
@@ -397,23 +437,146 @@ onActivated(() => {
 </template>
 
 <style lang="less" scoped>
+@keyframes group-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.group-header-enter {
+  animation: group-slide-in 0.5s cubic-bezier(0.22, 1.45, 0.36, 1) calc(var(--i, 0) * 0.06s) both;
+}
+
 .expand-enter-active,
 .expand-leave-active {
-  transform-origin: top;
-  transition:
-    transform 0.2s ease-in-out,
-    opacity 0.2s ease-in-out;
+  transition: opacity 0.25s ease;
 }
 
 .expand-enter-from,
 .expand-leave-to {
-  transform: scaleY(0);
+  opacity: 0;
 }
 
 .action-expand {
   transform: rotate(-90deg);
   &-expanded {
     transform: rotate(0deg);
+  }
+}
+
+.latency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  .pill-hover-icon {
+    width: 0;
+    opacity: 0;
+    margin-right: -4px;
+  }
+
+  &:hover {
+    background-color: var(--card-hover-bg);
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+    .pill-hover-icon {
+      width: 10px;
+      opacity: 1;
+      margin-right: 0;
+    }
+  }
+
+  &.level-0 {
+    color: var(--level-0-color);
+    background-color: rgba(128, 128, 128, 0.06);
+    border-color: rgba(128, 128, 128, 0.12);
+  }
+  &.level-1 {
+    color: var(--level-1-color);
+    background-color: rgba(41, 178, 128, 0.06);
+    border-color: rgba(41, 178, 128, 0.12);
+  }
+  &.level-2 {
+    color: var(--level-2-color);
+    background-color: rgba(182, 139, 31, 0.06);
+    border-color: rgba(182, 139, 31, 0.12);
+  }
+  &.level-3 {
+    color: var(--level-3-color);
+    background-color: rgba(234, 96, 96, 0.06);
+    border-color: rgba(234, 96, 96, 0.12);
+  }
+  &.level-4 {
+    color: var(--level-4-color);
+    background-color: rgba(240, 14, 14, 0.06);
+    border-color: rgba(240, 14, 14, 0.12);
+  }
+}
+
+.proxy-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: padding 0.2s ease-in-out;
+  
+  .proxy-type {
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: rgba(128, 128, 128, 0.1);
+    color: var(--color);
+    opacity: 0.8;
+  }
+  
+  .proxy-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    
+    &.udp {
+      background-color: rgba(41, 178, 128, 0.1);
+      color: var(--level-1-color);
+    }
+  }
+}
+
+.proxy-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(var(--card-cols, 3), minmax(0, 1fr));
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(min(4, var(--card-cols, 3)), minmax(0, 1fr));
+  }
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(min(3, var(--card-cols, 3)), minmax(0, 1fr));
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(min(2, var(--card-cols, 3)), minmax(0, 1fr));
+  }
+  @media (max-width: 576px) {
+    grid-template-columns: repeat(min(1, var(--card-cols, 3)), minmax(0, 1fr));
   }
 }
 </style>

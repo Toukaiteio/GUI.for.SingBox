@@ -4,7 +4,6 @@ import { FileExists, IsStartup } from '@/bridge'
 import CoreInstallPrompt from '@/components/_common/CoreInstallPrompt.vue'
 import { CoreWorkingDirectory } from '@/constant/kernel'
 import * as Stores from '@/stores'
-import { openDeveloperTools } from '@/utils/devTools'
 import { getKernelFileName, message, modal, sleep } from '@/utils'
 
 const MIN_SPLASH_DURATION = 1000
@@ -84,14 +83,6 @@ export const useAppBootstrap = () => {
     await sleep(Math.max(0, MIN_SPLASH_DURATION - duration))
 
     loading.value = false
-    if (appSettings.app.developerMode) {
-      setTimeout(() => {
-        openDeveloperTools().catch((error) => {
-          console.warn('Failed to open developer tools:', error)
-          message.warn('Failed to open DevTools automatically. Press Ctrl+Shift+F12 in the app.')
-        })
-      }, 1000)
-    }
     const coreInstalled = await showCoreInstallPrompt()
     kernelApiStore.initCoreState({ autoStart: coreInstalled })
   }

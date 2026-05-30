@@ -179,6 +179,10 @@ export default {
         path: 'Path',
         notFound: 'The rule set has been lost.',
         empty: 'The rule set list is empty.',
+        test_match: 'Match Test',
+        test_match_tip: 'Test if a domain or IP matches the current inline ruleset',
+        hit: 'Hit',
+        miss: 'Miss',
       },
       rules: {
         type: 'Type',
@@ -693,7 +697,7 @@ export default {
     rollingRelease: 'Enable Rolling Release',
     developerMode: {
       name: 'Developer mode',
-      tips: 'Try to open DevTools on startup, or press Ctrl+Shift+F12',
+      tips: 'Press Ctrl+Shift+F12 to open DevTools',
     },
     debugOutline: 'Show component outlines',
     debugNoAnimation: 'Disable animations',
@@ -750,7 +754,7 @@ export default {
     },
     updateSource: {
       name: 'Preferred Update Source',
-      tips: 'Used first when checking and downloading updates; falls back automatically on failure',
+      tips: 'Used first when checking and downloading updates',
       github: 'GitHub Official',
       ghproxy: 'ghproxy Mirror',
     },

@@ -101,7 +101,6 @@ if (envStore.env.os === OS.Windows) {
     <div class="px-8 py-12 flex items-center justify-between">
       <div class="text-16 font-bold">
         {{ $t('settings.systemProxyPorts.name') }}
-        <span class="font-normal text-12">({{ $t('settings.systemProxyPorts.tips') }})</span>
       </div>
       <Button type="primary" @click="handleShowCoreSettings">
         {{ $t('common.edit') }}

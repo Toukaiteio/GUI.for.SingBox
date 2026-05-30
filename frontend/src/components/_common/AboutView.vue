@@ -9,8 +9,6 @@ import {
   APP_TITLE,
   APP_VERSION,
   PROJECT_URL,
-  TG_GROUP,
-  TG_CHANNEL,
   message,
   RunWithOsaScript,
 } from '@/utils'
@@ -75,18 +73,6 @@ appStore.checkForUpdates()
       @click="BrowserOpenURL(PROJECT_URL)"
     >
       <Icon icon="github" />GitHub
-    </div>
-    <div
-      class="text-12 underline flex items-center cursor-pointer"
-      @click="BrowserOpenURL(TG_GROUP)"
-    >
-      <Icon icon="telegram" />Telegram Group
-    </div>
-    <div
-      class="text-12 underline flex items-center cursor-pointer"
-      @click="BrowserOpenURL(TG_CHANNEL)"
-    >
-      <Icon icon="telegram" />Telegram Channel
     </div>
   </div>
 </template>

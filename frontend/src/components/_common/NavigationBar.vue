@@ -18,13 +18,22 @@ const routes = computed(() =>
 </script>
 
 <template>
-  <div class="flex items-center justify-center">
-    <div v-for="r in routes" :key="r.path">
-      <RouterLink v-slot="{ navigate, isActive }" :to="r.path" custom>
-        <Button :type="isActive ? 'link' : 'text'" :icon="r.meta && r.meta.icon" @click="navigate">
-          {{ (r.meta && t(r.meta.name)) || r.name }}
-        </Button>
-      </RouterLink>
-    </div>
+  <div class="hypr-dock flex flex-col items-center gap-8 py-16 px-8 border-r border-white border-opacity-10 overflow-y-auto">
+    <RouterLink
+      v-for="r in routes"
+      :key="r.path"
+      v-slot="{ navigate, isActive }"
+      :to="r.path"
+      custom
+    >
+      <Button
+        v-tips.fast="(r.meta && t(r.meta.name)) || (r.name as string)"
+        :type="isActive ? 'primary' : 'text'"
+        :icon="r.meta && r.meta.icon"
+        :icon-size="20"
+        :class="['hypr-dock-item', { 'hypr-dock-active': isActive }]"
+        @click="navigate"
+      />
+    </RouterLink>
   </div>
 </template>

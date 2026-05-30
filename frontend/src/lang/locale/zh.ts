@@ -179,6 +179,10 @@ export default {
         path: '保存路径',
         notFound: '规则集已丢失',
         empty: '规则集列表为空',
+        test_match: '匹配测试',
+        test_match_tip: '测试域名或 IP 是否能被当前内联规则集匹配',
+        hit: '已命中',
+        miss: '未命中',
       },
       rules: {
         type: '规则类型',
@@ -693,7 +697,7 @@ export default {
     rollingRelease: '启用滚动发行',
     developerMode: {
       name: '开发者模式',
-      tips: '启动时尝试自动打开开发者工具，也可按 Ctrl+Shift+F12 打开',
+      tips: '按 Ctrl+Shift+F12 打开开发者工具',
     },
     debugOutline: '组件轮廓',
     debugNoAnimation: '禁用动画',
@@ -750,7 +754,7 @@ export default {
     },
     updateSource: {
       name: '首选更新源',
-      tips: '检查和下载更新时优先使用，失败时自动切换另一个源',
+      tips: '检查和下载更新时优先使用',
       github: 'Github官方源',
       ghproxy: 'ghproxy镜像',
     },

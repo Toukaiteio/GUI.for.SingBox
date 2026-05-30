@@ -201,12 +201,13 @@ const onSortUpdate = debounce(subscribeStore.saveSubscribes, 1000)
 
   <div
     v-draggable="[subscribeStore.subscribes, { ...DraggableOptions, onUpdate: onSortUpdate }]"
-    :class="'grid-list-' + appSettingsStore.app.subscribesView"
+    :class="['grid-list-' + appSettingsStore.app.subscribesView, 'subscribes-list-container']"
   >
     <Card
-      v-for="s in subscribeStore.subscribes"
+      v-for="(s, i) in subscribeStore.subscribes"
       :key="s.id"
       v-menu="generateMenus(s)"
+      :style="{ '--i': i }"
       :title="s.name"
       :disabled="s.disabled"
       class="grid-list-item"

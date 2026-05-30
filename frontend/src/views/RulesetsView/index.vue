@@ -180,12 +180,13 @@ const onSortUpdate = debounce(rulesetsStore.saveRulesets, 1000)
 
   <div
     v-draggable="[rulesetsStore.rulesets, { ...DraggableOptions, onUpdate: onSortUpdate }]"
-    :class="'grid-list-' + appSettingsStore.app.rulesetsView"
+    :class="['grid-list-' + appSettingsStore.app.rulesetsView, 'rulesets-list-container']"
   >
     <Card
-      v-for="r in rulesetsStore.rulesets"
+      v-for="(r, i) in rulesetsStore.rulesets"
       :key="r.id"
       v-menu="generateMenus(r)"
+      :style="{ '--i': i }"
       :title="r.tag"
       :disabled="r.disabled"
       class="grid-list-item"

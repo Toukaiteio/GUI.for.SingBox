@@ -155,17 +155,19 @@ onUnmounted(() => {
     @click="onClick"
   >
     <slot v-bind="{ open, close, toggle }"></slot>
-    <Transition name="overlay">
-      <div
-        v-show="show"
-        ref="overlayRef"
-        :style="overlayStyle"
-        class="gui-dropdown-overlay fixed z-99 rounded-8 backdrop-blur-sm shadow overflow-y-auto"
-        @click.stop
-      >
-        <slot name="overlay" v-bind="{ open, close, toggle }"></slot>
-      </div>
-    </Transition>
+    <Teleport to="body">
+      <Transition name="overlay">
+        <div
+          v-show="show"
+          ref="overlayRef"
+          :style="overlayStyle"
+          class="gui-dropdown-overlay fixed z-99 rounded-8 backdrop-blur-sm shadow overflow-y-auto"
+          @click.stop
+        >
+          <slot name="overlay" v-bind="{ open, close, toggle }"></slot>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 

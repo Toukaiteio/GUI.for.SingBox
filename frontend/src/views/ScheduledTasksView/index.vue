@@ -123,12 +123,13 @@ const onSortUpdate = debounce(scheduledTasksStore.saveScheduledTasks, 1000)
       scheduledTasksStore.scheduledtasks,
       { ...DraggableOptions, onUpdate: onSortUpdate },
     ]"
-    :class="'grid-list-' + appSettingsStore.app.scheduledtasksView"
+    :class="['grid-list-' + appSettingsStore.app.scheduledtasksView, 'tasks-list-container']"
   >
     <Card
-      v-for="s in scheduledTasksStore.scheduledtasks"
+      v-for="(s, i) in scheduledTasksStore.scheduledtasks"
       :key="s.id"
       v-menu="menuList.map((v) => ({ ...v, handler: () => v.handler?.(s.id) }))"
+      :style="{ '--i': i }"
       :title="s.name"
       :disabled="s.disabled"
       class="grid-list-item"

@@ -163,6 +163,16 @@ const renderRule = (rule: IDNSRule) => {
   }
   return children.join(',')
 }
+
+const getRuleIndex = (index: number) => {
+  let count = 0
+  for (let i = 0; i < index; i++) {
+    if (model.value[i]?.type !== RuleType.InsertionPoint) {
+      count++
+    }
+  }
+  return count + 1
+}
 </script>
 <template>
   <Empty v-if="model.length === 0 || (model.length === 1 && !isInsertionPointMissing)">
@@ -179,24 +189,39 @@ const renderRule = (rule: IDNSRule) => {
     </Button>
   </Divider>
 
-  <div v-draggable="[model, DraggableOptions]">
+  <div v-draggable="[model, { ...DraggableOptions, handle: '.drag' }]">
     <Card v-for="(rule, index) in model" :key="rule.id" class="mb-2">
       <div v-if="rule.type === RuleType.InsertionPoint" class="text-center font-bold">
-        <Divider class="cursor-move">
+        <Divider class="cursor-move drag">
           <Button icon="add" type="text" size="small" @click="handleAdd">
             {{ t('kernel.insertionPoint') }}
           </Button>
         </Divider>
       </div>
-      <div v-else class="flex items-start py-2 gap-8">
+      <div v-else class="flex items-center py-2 gap-4">
+        <div class="flex items-center gap-2 shrink-0 select-none">
+          <Icon icon="drag" class="drag cursor-move text-neutral-400 hover:text-primary transition-colors" :size="18" />
+          <div class="order-badge" :class="rule.enable ? 'enabled' : 'disabled'">
+            {{ getRuleIndex(index) }}
+          </div>
+        </div>
         <div class="shrink-0">
           <Switch v-model="rule.enable" border="square" size="small" />
         </div>
-        <div class="font-bold flex-1 rule-content">
-          <span v-if="hasLost(rule)" class="warn cursor-pointer" @click="showLost"> [ ! ] </span>
+        <div
+          class="font-bold flex-1 rule-content transition-all duration-300"
+          :class="!rule.enable ? 'opacity-40 line-through text-neutral-400 dark:text-neutral-500' : 'text-neutral-800 dark:text-neutral-200'"
+        >
+          <span
+            v-if="hasLost(rule)"
+            class="cursor-pointer mr-2 inline-flex items-center justify-center px-1.5 py-0.5 rounded text-10 font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20"
+            @click="showLost"
+          >
+            ! INVALID
+          </span>
           {{ renderRule(rule) }}
         </div>
-        <div class="ml-auto shrink-0">
+        <div class="ml-auto shrink-0 flex items-center gap-1">
           <Button
             v-if="rule.type === RuleType.RuleSet && rule.payload && hasLost(rule)"
             size="small"
@@ -335,5 +360,33 @@ const renderRule = (rule: IDNSRule) => {
 .rule-content {
   min-width: 0;
   word-break: break-all;
+}
+
+.order-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease-in-out;
+  
+  &.enabled {
+    background-color: var(--card-bg);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  &.disabled {
+    background-color: var(--card-bg);
+    color: var(--color);
+    opacity: 0.4;
+    border-color: var(--divider-color);
+  }
 }
 </style>

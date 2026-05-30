@@ -8,6 +8,12 @@ body[feature-no-animation='true'] {
   * {
     transition: none !important;
   }
+  .gui-card,
+  .hypr-stat-item,
+  .mode-active,
+  .mode-active::before {
+    animation: none !important;
+  }
 }
 
 body[feature-no-rounded='true'] {
@@ -137,4 +143,269 @@ body {
 .slide-down-enter-from,
 .slide-down-leave-to {
   transform: translateY(-100%);
+}
+
+/* ===================== Arch + Hyprland style ===================== */
+:root {
+  --hypr-spring: cubic-bezier(0.22, 1.45, 0.36, 1);
+}
+
+/* Stronger frosted glass on every blurred overlay */
+body .backdrop-blur-sm {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+/* Floating surfaces -> frosted "windows" with a subtle accent border */
+.gui-card,
+.gui-menu,
+.gui-dropdown-overlay,
+.gui-confirm,
+.gui-picker,
+.gui-message,
+.gui-tips,
+.gui-modal-modal {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+}
+
+/* Hyprland-like window radii (combined class keeps feature-no-rounded working) */
+.gui-card.rounded-8 {
+  border-radius: 14px;
+}
+.gui-modal-modal.rounded-8 {
+  border-radius: 18px;
+}
+
+/* Card: animated lift + active-window glow */
+.gui-card {
+  transition:
+    transform 0.25s var(--hypr-spring),
+    box-shadow 0.25s,
+    border-color 0.25s,
+    background 0.2s !important;
+}
+.gui-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary-color) 55%, transparent);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.22),
+    0 0 22px color-mix(in srgb, var(--primary-color) 22%, transparent) !important;
+}
+
+/* Modal: glowing floating window + springy open/close */
+.gui-modal-modal {
+  border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 48px color-mix(in srgb, var(--primary-color) 28%, transparent) !important;
+}
+.modal-enter-active .gui-modal-modal,
+.modal-leave-active .gui-modal-modal {
+  transition:
+    transform 0.34s var(--hypr-spring),
+    opacity 0.28s ease,
+    filter 0.28s ease !important;
+}
+.modal-enter-from .gui-modal-modal,
+.modal-leave-to .gui-modal-modal {
+  opacity: 0 !important;
+  transform: scale(0.9) !important;
+  filter: blur(12px);
+}
+
+/* Buttons: springy press */
+.gui-button {
+  transition-timing-function: var(--hypr-spring);
+}
+.gui-button:active {
+  transform: scale(0.92);
+}
+
+/* Inputs & selects: frosted glass */
+.gui-input,
+.gui-select {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Scrollbar: accent pill */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary-color) 75%, transparent);
+}
+
+/* ---- Shell: frosted Hyprland windows (no hover lift on big panels) ---- */
+.hypr-panel {
+  background-color: var(--card-bg);
+  color: var(--card-color);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
+}
+
+/* Left icon dock */
+.hypr-dock {
+  width: 60px;
+  flex-shrink: 0;
+}
+.hypr-bar {
+  flex-shrink: 0;
+}
+
+/* Square dock buttons with springy hover + active glow */
+.hypr-dock-item {
+  width: 42px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  transition:
+    transform 0.2s var(--hypr-spring),
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.hypr-dock-item:hover {
+  transform: translateY(-2px);
+}
+.hypr-dock-active {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary-color) 55%, transparent);
+}
+
+/* ===================== Neon dashboard (image reference) ===================== */
+:root {
+  --neon-cyan: #22d3ee;
+  --neon-purple: #a855f7;
+  --neon-green: #34d399;
+  --neon-blue: #3b82f6;
+}
+
+/* Card entrance animation */
+@keyframes hypr-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.gui-card,
+.hypr-stat-item {
+  animation: hypr-in 0.45s var(--hypr-spring) calc(var(--i, 0) * 0.05s) backwards;
+}
+
+/* Neon icon badge + big numbers */
+.stat-badge {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+}
+
+.mode-card {
+  position: relative;
+  background: transparent !important;
+  border: none !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 12px 16px !important;
+  margin-bottom: 4px;
+  transition: all 0.2s ease !important;
+}
+.mode-card:hover {
+  transform: none !important;
+  background-color: color-mix(in srgb, var(--primary-color) 6%, transparent) !important;
+  box-shadow: none !important;
+}
+.mode-card.mode-active {
+  border-left-color: var(--primary-color) !important;
+  background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+  box-shadow: none !important;
+}
+
+/* Freeze the animation on mode-card after it plays once so class toggling doesn't replay it */
+.mode-card {
+  animation: hypr-in 0.45s var(--hypr-spring) calc(var(--i, 0) * 0.05s) both;
+  animation-iteration-count: 1;
+}
+
+/* ===================== Grid & List View Cards Flat Theme ===================== */
+.grid-list-grid .gui-card,
+.grid-list-list .gui-card {
+  position: relative;
+  background: transparent !important;
+  background-color: color-mix(in srgb, var(--primary-color) 4%, transparent) !important;
+  border: none !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  /* Retain entrance animations and enable smooth color transitions */
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.25s ease !important;
+}
+
+.grid-list-grid .gui-card:hover,
+.grid-list-list .gui-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+}
+
+/* Profiles selected style (active profile) */
+.profiles-list-container .gui-card.card-selected {
+  border-left-color: var(--primary-color) !important;
+  background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+}
+
+/* Subscribes, Rulesets, and Tasks active (enabled) styles */
+.subscribes-list-container .gui-card:not(.card-disabled),
+.rulesets-list-container .gui-card:not(.card-disabled),
+.tasks-list-container .gui-card:not(.card-disabled) {
+  border-left-color: var(--primary-color) !important;
+  background-color: color-mix(in srgb, var(--primary-color) 6%, transparent) !important;
+}
+
+/* Subscribes, Rulesets, and Tasks disabled styles */
+.subscribes-list-container .gui-card.card-disabled,
+.rulesets-list-container .gui-card.card-disabled,
+.tasks-list-container .gui-card.card-disabled {
+  opacity: 0.55;
+  border-left-color: transparent !important;
+  background-color: color-mix(in srgb, var(--primary-color) 2%, transparent) !important;
+}
+
+/* Proxy grid cards — same flat theme as grid-list */
+.proxy-grid .gui-card {
+  background: transparent !important;
+  background-color: color-mix(in srgb, var(--primary-color) 4%, transparent) !important;
+  border: none !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  animation: hypr-in 0.3s var(--hypr-spring) both;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease !important;
+}
+.proxy-grid .gui-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+}
+.proxy-grid .gui-card.card-selected {
+  border-left-color: var(--primary-color) !important;
+  background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
 }

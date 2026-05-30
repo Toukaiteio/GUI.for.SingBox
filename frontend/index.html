@@ -7,6 +7,19 @@
     <title>%VITE_APP_TITLE%</title>
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme-mode');
+          if (theme === 'dark' || theme === 'light') {
+            document.body.setAttribute('theme-mode', theme);
+          } else {
+            const matches = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.setAttribute('theme-mode', matches ? 'dark' : 'light');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="ipc-error" style="display: none" class="px-32 leading-relaxed">
       <h1>WebView2 Runtime Error</h1>
       <p>

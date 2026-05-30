@@ -258,9 +258,10 @@ const onSortUpdate = debounce(pluginsStore.savePlugins, 1000)
     :class="'grid-list-' + appSettingsStore.app.pluginsView"
   >
     <Card
-      v-for="p in pluginsStore.plugins"
+      v-for="(p, i) in pluginsStore.plugins"
       :key="p.id"
       v-menu="generateMenus(p)"
+      :style="{ '--i': i }"
       :title="p.name"
       :disabled="p.disabled"
       class="grid-list-item"
