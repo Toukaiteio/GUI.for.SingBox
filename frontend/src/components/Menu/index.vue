@@ -13,6 +13,7 @@ const model = defineModel<boolean>({ default: false })
 const props = defineProps<Props>()
 
 const secondaryMenu = ref<Menu[] | undefined>()
+const activeTriggerEl = ref<HTMLElement | null>(null)
 
 const menuRef = useTemplateRef('menuRef')
 const secondaryMenuRef = useTemplateRef('secondaryMenuRef')
@@ -26,6 +27,17 @@ const handleClick = (fn: Menu) => {
   fn.handler?.()
   model.value = false
   secondaryMenu.value = undefined
+  activeTriggerEl.value = null
+}
+
+const handleHover = (e: MouseEvent, menu: Menu) => {
+  if (menu.children) {
+    activeTriggerEl.value = e.currentTarget as HTMLElement
+    secondaryMenu.value = menu.children
+  } else {
+    secondaryMenu.value = undefined
+    activeTriggerEl.value = null
+  }
 }
 
 const fixMenuPos = (x: number, y: number) => {
@@ -42,17 +54,32 @@ const fixMenuPos = (x: number, y: number) => {
 }
 
 const fixSecondaryMenuPos = () => {
-  const { x, y } = props.position
-  const { offsetWidth: menuWidth, offsetHeight: menuHeight } = menuRef.value!
+  if (!activeTriggerEl.value || !menuRef.value || !secondaryMenuRef.value) return
 
-  let left = menuWidth
-  let top = menuHeight
+  const triggerEl = activeTriggerEl.value
+  const parentEl = menuRef.value
+  const sMenuEl = secondaryMenuRef.value
 
-  const { offsetWidth: clientWidth, offsetHeight: clientHeight } = document.body
-  const { offsetWidth: sMenuWidth, offsetHeight: sMenuHeight } = secondaryMenuRef.value!
+  const parentRect = parentEl.getBoundingClientRect()
+  const sMenuWidth = sMenuEl.offsetWidth
+  const sMenuHeight = sMenuEl.offsetHeight
+  const clientWidth = document.body.offsetWidth
+  const clientHeight = document.body.offsetHeight
 
-  if (left + sMenuWidth + x > clientWidth) left -= x + menuWidth + sMenuWidth - clientWidth + 8
-  if (top + sMenuHeight + y > clientHeight) top -= sMenuHeight
+  let left = parentRect.width
+  let top = triggerEl.offsetTop
+
+  // Check if there is enough space on the right side
+  if (parentRect.left + parentRect.width + sMenuWidth > clientWidth) {
+    // If not, place on the left of the parent menu
+    left = -sMenuWidth
+  }
+
+  // Check if there is space below
+  if (parentRect.top + top + sMenuHeight > clientHeight) {
+    const overflow = (parentRect.top + top + sMenuHeight) - clientHeight
+    top = Math.max(0, top - overflow - 8)
+  }
 
   secondaryMenuPosition.value = { left: left + 'px', top: top + 'px' }
 }
@@ -62,6 +89,7 @@ watch(
   ({ x, y }) => {
     nextTick(() => fixMenuPos(x, y))
     secondaryMenu.value = undefined
+    activeTriggerEl.value = null
   },
 )
 
@@ -72,6 +100,7 @@ watch([() => secondaryMenu.value, () => props.position], () => {
 const onClick = () => {
   model.value = false
   secondaryMenu.value = undefined
+  activeTriggerEl.value = null
 }
 
 onMounted(() => document.addEventListener('click', onClick))
@@ -94,7 +123,7 @@ onUnmounted(() => document.removeEventListener('click', onClick))
           type="text"
           size="small"
           @click="handleClick(menu)"
-          @mouseenter="secondaryMenu = menu.children"
+          @mouseenter="handleHover($event, menu)"
         >
           <div class="text-nowrap">
             {{ t(menu.label) }}
@@ -107,7 +136,7 @@ onUnmounted(() => document.removeEventListener('click', onClick))
           v-show="secondaryMenu"
           ref="secondaryMenuRef"
           :style="secondaryMenuPosition"
-          class="gui-menu absolute fixed z-999 p-4 rounded-6 shadow flex flex-col gap-4 backdrop-blur-sm"
+          class="gui-menu fixed z-99999 p-4 rounded-6 shadow flex flex-col gap-4 backdrop-blur-sm"
         >
           <Button
             v-for="m in secondaryMenu"

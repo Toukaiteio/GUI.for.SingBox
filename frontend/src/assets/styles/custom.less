@@ -67,8 +67,8 @@ body {
   font-size: 12px;
   .grid-list-item {
     display: inline-block;
-    margin: 8px;
-    width: calc(100% / 3 - 16px);
+    margin: 4px;
+    width: calc(100% / 3 - 8px);
   }
 }
 
@@ -79,8 +79,8 @@ body {
   font-size: 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 8px;
+  gap: 8px;
+  padding: 4px;
 }
 
 .grid-list-header {
@@ -170,12 +170,22 @@ body .backdrop-blur-sm {
   border: 1px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
-/* Hyprland-like window radii (combined class keeps feature-no-rounded working) */
+/* Fluent-like tile window radii (cleaner, optimized rounded corners) */
 .gui-card.rounded-8 {
-  border-radius: 14px;
+  border-radius: 6px;
 }
 .gui-modal-modal.rounded-8 {
-  border-radius: 18px;
+  border-radius: 8px;
+}
+
+/* Tightened rounded corners for menus, dropdowns, and overlays */
+.gui-menu,
+.gui-dropdown-overlay,
+.gui-confirm,
+.gui-picker,
+.gui-message,
+.gui-tips {
+  border-radius: 6px !important;
 }
 
 /* Card: animated lift + active-window glow */
@@ -257,22 +267,25 @@ body .backdrop-blur-sm {
   flex-shrink: 0;
 }
 
-/* Square dock buttons with springy hover + active glow */
+/* Square dock buttons with flat design + left indicator stripe */
 .hypr-dock-item {
+  position: relative;
   width: 42px !important;
   height: 42px !important;
   padding: 0 !important;
-  border-radius: 12px !important;
+  border-radius: 4px !important;
   transition:
-    transform 0.2s var(--hypr-spring),
-    background 0.2s,
-    box-shadow 0.2s;
+    background-color 0.2s ease,
+    color 0.2s ease !important;
 }
+
 .hypr-dock-item:hover {
-  transform: translateY(-2px);
+  transform: none !important;
+  background-color: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
 }
 .hypr-dock-active {
-  box-shadow: 0 0 16px color-mix(in srgb, var(--primary-color) 55%, transparent);
+  background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+  box-shadow: none !important;
 }
 
 /* ===================== Neon dashboard (image reference) ===================== */
@@ -304,7 +317,7 @@ body .backdrop-blur-sm {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,8 +400,9 @@ body .backdrop-blur-sm {
   background-color: color-mix(in srgb, var(--primary-color) 2%, transparent) !important;
 }
 
-/* Proxy grid cards — same flat theme as grid-list */
+/* Proxy grid cards — same flat tile theme */
 .proxy-grid .gui-card {
+  position: relative;
   background: transparent !important;
   background-color: color-mix(in srgb, var(--primary-color) 4%, transparent) !important;
   border: none !important;
@@ -398,7 +412,8 @@ body .backdrop-blur-sm {
   animation: hypr-in 0.3s var(--hypr-spring) both;
   transition:
     background-color 0.25s ease,
-    border-color 0.25s ease !important;
+    border-color 0.25s ease,
+    opacity 0.25s ease !important;
 }
 .proxy-grid .gui-card:hover {
   transform: none !important;
@@ -408,4 +423,21 @@ body .backdrop-blur-sm {
 .proxy-grid .gui-card.card-selected {
   border-left-color: var(--primary-color) !important;
   background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+  box-shadow: none !important;
+}
+
+/* Disable card hover animations and effects in settings view and profile form dialog */
+.settings-view-container .gui-card,
+.profile-form-container .gui-card {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: color-mix(in srgb, var(--primary-color) 25%, transparent) !important;
+  animation: none !important;
+}
+.settings-view-container .gui-card:hover,
+.profile-form-container .gui-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: color-mix(in srgb, var(--primary-color) 25%, transparent) !important;
+  background-color: var(--card-bg) !important;
 }

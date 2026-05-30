@@ -16,6 +16,7 @@ export interface Props {
   clearable?: boolean
   allowPaste?: boolean
   autofocus?: boolean
+  submitOnEnter?: boolean
   min?: number
   max?: number
   maxWidth?: boolean
@@ -33,6 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'default',
   editable: false,
   autofocus: false,
+  submitOnEnter: true,
   allowPaste: false,
   min: undefined,
   max: undefined,
@@ -164,8 +166,8 @@ defineExpose({
         class="flex-1 inline-block py-6 outline-none border-0 bg-transparent w-0"
         @input="onInput"
         @blur="onSubmit"
-        @keydown.enter="() => nextTick(() => inputRef?.blur())"
-        @keydown.esc.stop.prevent="inputRef?.blur"
+        @keydown.enter="submitOnEnter && nextTick(() => inputRef?.blur())"
+        @keydown.esc.prevent="inputRef?.blur"
       />
       <Button
         v-if="innerClearable"

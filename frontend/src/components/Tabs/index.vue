@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 type TabItemType = {
   key: string
   tab: string
+  disabled?: boolean
   component?: Component
 }
 
@@ -98,7 +99,7 @@ onUnmounted(() => {
           opacity: activeBgStyle.opacity,
           borderLeft: '3px solid var(--primary-color)',
           backgroundColor: 'var(--btn-text-hover-bg)',
-          borderRadius: '8px',
+          borderRadius: '0px',
           transition: 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.3s, width 0.3s, opacity 0.3s'
         }"
       ></div>
@@ -108,6 +109,7 @@ onUnmounted(() => {
         :key="tab.key"
         :ref="el => { if (el) tabRefs[i] = el }"
         :type="isActive(tab) ? 'link' : 'text'"
+        :disabled="tab.disabled"
         :style="!isTop ? { '--tab-i': i } : {}"
         @click="handleChange(tab.key)"
       >
@@ -140,7 +142,7 @@ onUnmounted(() => {
     font-size: 15px;
     font-weight: 500;
     padding: 8px 16px !important;
-    border-radius: 8px;
+    border-radius: 0 !important;
     transition: all 0.2s ease-in-out;
     background-color: transparent;
     color: var(--color);

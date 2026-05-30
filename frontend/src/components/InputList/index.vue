@@ -118,6 +118,7 @@ const emitUpdate = () => {
       :placeholder="placeholder"
       type="text"
       clearable
+      :submit-on-enter="false"
       :autofocus="autofocus"
       class="mt-4 w-full"
       @keydown.enter="handleAdd"

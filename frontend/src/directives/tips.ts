@@ -17,16 +17,22 @@ export default {
       }
     }, delay)
 
+    const hide = debounce(() => {
+      appStore.tipsShow = false
+      el.dataset.showTips = 'false'
+    }, 150)
+
     el.onmouseenter = (e: MouseEvent) => {
       if (binding.value) {
+        hide.cancel()
         el.dataset.showTips = 'true'
         show(e.clientX, e.clientY)
       }
     }
 
     el.onmouseleave = () => {
-      appStore.tipsShow = false
-      el.dataset.showTips = 'false'
+      show.cancel()
+      hide()
     }
   },
   beforeUnmount(el: HTMLElement) {

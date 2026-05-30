@@ -42,7 +42,6 @@ const dnsRef = useTemplateRef('dnsRef')
 const profilesStore = useProfilesStore()
 
 const loading = ref(false)
-const currentStep = ref(props.step)
 
 const stepItems = [
   { title: 'profile.step.general' },
@@ -52,6 +51,34 @@ const stepItems = [
   { title: 'profile.step.dns' },
   { title: 'profile.step.mixin-script' },
 ] as const
+
+const tabItems = computed(() => [
+  { key: 'general', tab: 'profile.step.general', disabled: !profile.value.name && activeKey.value !== 'general' },
+  { key: 'inbounds', tab: 'profile.step.inbounds', disabled: !profile.value.name && activeKey.value !== 'inbounds' },
+  { key: 'outbounds', tab: 'profile.step.outbounds', disabled: !profile.value.name && activeKey.value !== 'outbounds' },
+  { key: 'route', tab: 'profile.step.route', disabled: !profile.value.name && activeKey.value !== 'route' },
+  { key: 'dns', tab: 'profile.step.dns', disabled: !profile.value.name && activeKey.value !== 'dns' },
+  { key: 'mixin-script', tab: 'profile.step.mixin-script', disabled: !profile.value.name && activeKey.value !== 'mixin-script' },
+])
+
+const activeKey = ref('general')
+
+const currentStep = computed(() => {
+  const map: Record<string, number> = {
+    general: Step.General,
+    inbounds: Step.Inbounds,
+    outbounds: Step.Outbounds,
+    route: Step.Route,
+    dns: Step.Dns,
+    'mixin-script': Step.MixinScript,
+  }
+  return map[activeKey.value] ?? Step.General
+})
+
+const keyList = ['general', 'inbounds', 'outbounds', 'route', 'dns', 'mixin-script']
+if (props.step !== undefined && keyList[props.step]) {
+  activeKey.value = keyList[props.step] || 'general'
+}
 
 const profile = ref<IProfile>(profilesStore.getProfileTemplate())
 
@@ -178,54 +205,60 @@ defineExpose({ modalSlots })
 </script>
 
 <template>
-  <div class="flex gap-16 h-full overflow-hidden">
-    <div class="shrink-0 flex flex-col gap-2 overflow-y-auto" style="width: 130px">
-      <Button
-        v-for="(item, index) in stepItems"
-        :key="item.title"
-        :type="currentStep === index ? 'link' : 'text'"
-        :disabled="!profile.name && currentStep !== index"
-        class="w-full"
-        @click="currentStep = index"
-      >
-        {{ t(item.title) }}
-      </Button>
-    </div>
-    <div class="flex-1 overflow-auto">
-      <div v-if="currentStep === Step.General">
-        <div class="form-item">
-          {{ t('profile.name') }}
-          <Input v-model="profile.name" autofocus :placeholder="t('profile.name')" />
+  <div class="profile-form-container h-full">
+    <Tabs
+      v-model:active-key="activeKey"
+      :items="tabItems"
+      tab-width="130px"
+      content-width="calc(100% - 130px)"
+      class="h-full"
+    >
+      <template #general>
+        <div class="pr-8">
+          <div class="form-item">
+            {{ t('profile.name') }}
+            <Input v-model="profile.name" autofocus :placeholder="t('profile.name')" />
+          </div>
+          <GeneralConfig v-model="generalConfig" :outbound-options="outboundOptions" />
         </div>
-        <GeneralConfig v-model="generalConfig" :outbound-options="outboundOptions" />
-      </div>
-      <div v-if="currentStep === Step.Inbounds">
-        <InboundsConfig ref="inboundsRef" v-model="profile.inbounds" />
-      </div>
-      <div v-if="currentStep === Step.Outbounds">
-        <OutboundsConfig ref="outboundsRef" v-model="profile.outbounds" />
-      </div>
-      <div v-if="currentStep === Step.Route">
-        <RouteConfig
-          ref="routeRef"
-          v-model="profile.route"
-          :inbound-options="inboundOptions"
-          :outbound-options="outboundOptions"
-          :server-options="serverOptions"
-        />
-      </div>
-      <div v-if="currentStep === Step.Dns">
-        <DnsConfig
-          ref="dnsRef"
-          v-model="profile.dns"
-          :inbound-options="inboundOptions"
-          :outbound-options="outboundOptions"
-          :rule-set="profile.route.rule_set"
-        />
-      </div>
-      <div v-if="currentStep === Step.MixinScript">
-        <MixinAndScript v-model="mixinAndScriptConfig" />
-      </div>
-    </div>
+      </template>
+      <template #inbounds>
+        <div class="pr-8">
+          <InboundsConfig ref="inboundsRef" v-model="profile.inbounds" />
+        </div>
+      </template>
+      <template #outbounds>
+        <div class="pr-8">
+          <OutboundsConfig ref="outboundsRef" v-model="profile.outbounds" />
+        </div>
+      </template>
+      <template #route>
+        <div class="pr-8">
+          <RouteConfig
+            ref="routeRef"
+            v-model="profile.route"
+            :inbound-options="inboundOptions"
+            :outbound-options="outboundOptions"
+            :server-options="serverOptions"
+          />
+        </div>
+      </template>
+      <template #dns>
+        <div class="pr-8">
+          <DnsConfig
+            ref="dnsRef"
+            v-model="profile.dns"
+            :inbound-options="inboundOptions"
+            :outbound-options="outboundOptions"
+            :rule-set="profile.route.rule_set"
+          />
+        </div>
+      </template>
+      <template #mixin-script>
+        <div class="pr-8">
+          <MixinAndScript v-model="mixinAndScriptConfig" />
+        </div>
+      </template>
+    </Tabs>
   </div>
 </template>

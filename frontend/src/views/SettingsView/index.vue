@@ -33,17 +33,19 @@ const appStore = useAppStore()
 </script>
 
 <template>
-  <Tabs
-    v-model:active-key="activeKey"
-    :items="settings"
-    tab-width="15%"
-    content-width="85%"
-    class="h-full"
-  >
-    <template #extra>
-      <Button type="text" @click="appStore.showAbout = true">
-        {{ t('router.about') }}
-      </Button>
-    </template>
-  </Tabs>
+  <div class="settings-view-container h-full">
+    <Tabs
+      v-model:active-key="activeKey"
+      :items="settings"
+      tab-width="15%"
+      content-width="85%"
+      class="h-full"
+    >
+      <template #extra>
+        <Button type="text" @click="appStore.showAbout = true">
+          {{ t('router.about') }}
+        </Button>
+      </template>
+    </Tabs>
+  </div>
 </template>

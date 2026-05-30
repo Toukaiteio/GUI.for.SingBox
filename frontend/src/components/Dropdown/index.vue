@@ -105,9 +105,11 @@ const toggle = () => (show.value = !show.value)
 const hasTrigger = (t: TriggerType) => props.trigger.includes(t)
 
 const debounceOpen = debounce(open, props.delay)
+const debounceClose = debounce(close, 100)
 
 const onMouseEnter = () => {
   if (hasTrigger('hover')) {
+    debounceClose.cancel()
     debounceOpen()
   }
 }
@@ -115,7 +117,19 @@ const onMouseEnter = () => {
 const onMouseLeave = () => {
   if (hasTrigger('hover')) {
     debounceOpen.cancel()
-    close()
+    debounceClose()
+  }
+}
+
+const onOverlayMouseEnter = () => {
+  if (hasTrigger('hover')) {
+    debounceClose.cancel()
+  }
+}
+
+const onOverlayMouseLeave = () => {
+  if (hasTrigger('hover')) {
+    debounceClose()
   }
 }
 
@@ -162,6 +176,8 @@ onUnmounted(() => {
           ref="overlayRef"
           :style="overlayStyle"
           class="gui-dropdown-overlay fixed z-99 rounded-8 backdrop-blur-sm shadow overflow-y-auto"
+          @mouseenter="onOverlayMouseEnter"
+          @mouseleave="onOverlayMouseLeave"
           @click.stop
         >
           <slot name="overlay" v-bind="{ open, close, toggle }"></slot>
