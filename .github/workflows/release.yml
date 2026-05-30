@@ -166,7 +166,7 @@ jobs:
           name: macos-builds
           path: build/bin/*.zip
 
-  Build-Linux:
+  Build-Linux-amd64:
     needs: [Prepare-Release, Build-Frontend]
     if: needs.Prepare-Release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
@@ -184,42 +184,81 @@ jobs:
           name: frontend-dist
           path: frontend/dist
       - run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: Build & Pack Linux amd64
+        run: |
+          export GOOS=linux GOARCH=amd64 CGO_ENABLED=1
+          ~/go/bin/wails build -m -s -trimpath -skipbindings -devtools -tags webkit2_41 -o $APP_NAME.exe
+          cd build/bin
+          mv $APP_NAME.exe $APP_NAME
+          zip $APP_NAME-linux-amd64.zip $APP_NAME
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-amd64-build
+          path: build/bin/*.zip
+
+  Build-Linux-arm64:
+    needs: [Prepare-Release, Build-Frontend]
+    if: needs.Prepare-Release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    env:
+      APP_NAME: GUI.for.SingBox
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      - uses: actions/download-artifact@v8
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - name: Setup arm64 cross-compile environment
+        run: |
           sudo dpkg --add-architecture arm64
+          CODENAME=$(. /etc/os-release && echo "$VERSION_CODENAME")
+
+          # Pin default mirrors to amd64 only
+          if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+            sudo sed -i 's/^Components:/Architectures: amd64\nComponents:/' /etc/apt/sources.list.d/ubuntu.sources
+          fi
+          if [ -s /etc/apt/sources.list ]; then
+            sudo sed -i 's|^deb \(http\)|deb [arch=amd64] \1|' /etc/apt/sources.list
+          fi
+
+          # arm64 packages from ports.ubuntu.com
+          sudo tee /etc/apt/sources.list.d/arm64-ports.sources > /dev/null <<EOF
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: ${CODENAME} ${CODENAME}-updates ${CODENAME}-backports ${CODENAME}-security
+          Components: main restricted universe multiverse
+          Architectures: arm64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+
           sudo apt-get update
           sudo apt-get install -y \
             libgtk-3-dev libwebkit2gtk-4.1-dev \
             gcc-aarch64-linux-gnu \
             libgtk-3-dev:arm64 libwebkit2gtk-4.1-dev:arm64
-
-      - name: Build & Pack Linux
+      - name: Build & Pack Linux arm64
         run: |
-          build_and_pack() {
-            arch=$1
-            export GOOS=linux GOARCH=$arch CGO_ENABLED=1
-
-            if [ "$arch" = "arm64" ]; then
-              export CC=aarch64-linux-gnu-gcc
-              export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
-            fi
-
-            echo "==> Building Linux $arch..."
-            ~/go/bin/wails build -m -s -trimpath -skipbindings -devtools -tags webkit2_41 -o $APP_NAME.exe
-
-            cd build/bin
-            mv $APP_NAME.exe $APP_NAME
-            zip $APP_NAME-linux-$arch.zip $APP_NAME
-            cd ../..
-          }
-
-          for arch in amd64 arm64; do build_and_pack $arch; done
-
+          export GOOS=linux GOARCH=arm64 CGO_ENABLED=1
+          export CC=aarch64-linux-gnu-gcc
+          export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+          ~/go/bin/wails build -m -s -trimpath -skipbindings -devtools -tags webkit2_41 -o $APP_NAME.exe
+          cd build/bin
+          mv $APP_NAME.exe $APP_NAME
+          zip $APP_NAME-linux-arm64.zip $APP_NAME
       - uses: actions/upload-artifact@v6
         with:
-          name: linux-builds
+          name: linux-arm64-build
           path: build/bin/*.zip
 
   Release:
-    needs: [Prepare-Release, Build-Windows, Build-macOS, Build-Linux]
+    needs: [Prepare-Release, Build-Windows, Build-macOS, Build-Linux-amd64, Build-Linux-arm64]
     if: needs.Prepare-Release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
