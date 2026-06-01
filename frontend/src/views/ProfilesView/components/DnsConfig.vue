@@ -47,29 +47,66 @@ defineExpose({ handleAdd })
 <template>
   <Tabs v-model:active-key="activeKey" :items="tabs" tab-position="top">
     <template #common>
-      <div class="form-item">
-        {{ t('kernel.dns.disable_cache') }}
-        <Switch v-model="model.disable_cache" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.dns.disable_expire') }}
-        <Switch v-model="model.disable_expire" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.dns.independent_cache') }}
-        <Switch v-model="model.independent_cache" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.dns.final') }}
-        <Select v-model="model.final" :options="serversOptions" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.dns.strategy') }}
-        <Select v-model="model.strategy" :options="DomainStrategyOptions" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.dns.client_subnet') }}
-        <Input v-model="model.client_subnet" editable />
+      <div class="bento-grid">
+        <!-- Card 1: DNS Cache Settings (span-6) -->
+        <div class="bento-card span-6">
+          <div class="bento-card-title">
+            <Icon icon="overview" />
+            DNS Cache Settings
+          </div>
+          <div class="bento-card-desc">
+            Enable or disable caching behavior for domain name resolution queries
+          </div>
+          <div class="bento-card-content">
+            <div class="form-item">
+              {{ t('kernel.dns.disable_cache') }}
+              <Switch v-model="model.disable_cache" />
+            </div>
+            <div class="form-item">
+              {{ t('kernel.dns.disable_expire') }}
+              <Switch v-model="model.disable_expire" />
+            </div>
+            <div class="form-item">
+              {{ t('kernel.dns.independent_cache') }}
+              <Switch v-model="model.independent_cache" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Strategy & Default Server (span-6) -->
+        <div class="bento-card span-6">
+          <div class="bento-card-title">
+            <Icon icon="settings" />
+            Strategy & Fallback
+          </div>
+          <div class="bento-card-desc">
+            Domain strategy routing options and final fallback DNS server
+          </div>
+          <div class="bento-card-content">
+            <div class="form-item vertical">
+              <span class="form-item-label">{{ t('kernel.dns.final') }}</span>
+              <Select v-model="model.final" :options="serversOptions" />
+            </div>
+            <div class="form-item vertical">
+              <span class="form-item-label">{{ t('kernel.dns.strategy') }}</span>
+              <Select v-model="model.strategy" :options="DomainStrategyOptions" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Client Subnet (span-12) -->
+        <div class="bento-card span-12">
+          <div class="bento-card-title">
+            <Icon icon="link" />
+            {{ t('kernel.dns.client_subnet') }}
+          </div>
+          <div class="bento-card-desc">
+            EDNS client subnet to optimize server response routing geographically
+          </div>
+          <div class="bento-card-content mt-4">
+            <Input v-model="model.client_subnet" editable :max-width="false" />
+          </div>
+        </div>
       </div>
     </template>
     <template #servers>

@@ -50,6 +50,7 @@ export default {
     downloading: '下载中...',
     empty: '数据为空',
     pressAgainToClose: '再按一次关闭弹窗',
+    collapse: '收起',
   },
   kernel: {
     rule: '规则',
@@ -635,6 +636,15 @@ export default {
     },
     fontFamily: '字体',
     resetFont: '重置字体',
+    background: {
+      name: '背景',
+      light: '浅色主题',
+      dark: '深色主题',
+      image: '背景图片',
+      imageTip: '本地路径或图片链接，留空使用默认',
+      blur: '模糊度',
+      opacity: '不透明度',
+    },
     appFolder: {
       name: '应用程序文件夹',
       open: '打开应用程序文件夹',

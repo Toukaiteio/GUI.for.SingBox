@@ -72,4 +72,45 @@ const handleOpenLocalesFolder = async () => {
       <CheckBox v-model="appSettings.app.pages" :options="pages" />
     </div>
   </Card>
+
+  <Card>
+    <div class="px-8 py-12 text-16 font-bold">{{ $t('settings.background.name') }}</div>
+    <template v-for="mode in (['light', 'dark'] as const)" :key="mode">
+      <Divider>{{ $t('settings.background.' + mode) }}</Divider>
+      <div class="px-8 py-12 flex items-center justify-between">
+        <div class="text-14 font-bold">{{ $t('settings.background.image') }}</div>
+        <Input
+          v-model="appSettings.app.background[mode].image"
+          editable
+          clearable
+          :placeholder="$t('settings.background.imageTip')"
+          class="text-14"
+        />
+      </div>
+      <div class="px-8 py-12 flex items-center justify-between">
+        <div class="text-14 font-bold">{{ $t('settings.background.blur') }}</div>
+        <Input
+          v-model="appSettings.app.background[mode].blur"
+          :min="0"
+          :max="50"
+          editable
+          type="number"
+        >
+          <template #suffix="{ showInput }"><span class="ml-4" @click="showInput">px</span></template>
+        </Input>
+      </div>
+      <div class="px-8 py-12 flex items-center justify-between">
+        <div class="text-14 font-bold">{{ $t('settings.background.opacity') }}</div>
+        <Input
+          v-model="appSettings.app.background[mode].opacity"
+          :min="0"
+          :max="100"
+          editable
+          type="number"
+        >
+          <template #suffix="{ showInput }"><span class="ml-4" @click="showInput">%</span></template>
+        </Input>
+      </div>
+    </template>
+  </Card>
 </template>

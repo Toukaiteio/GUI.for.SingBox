@@ -22,10 +22,31 @@ export const useAppBootstrap = () => {
   const pluginsStore = Stores.usePluginsStore()
   const scheduledTasksStore = Stores.useScheduledTasksStore()
   const kernelApiStore = Stores.useKernelApiStore()
+  let hourlyUpdateTimeout: ReturnType<typeof setTimeout> | null = null
+  let hourlyUpdateInterval: ReturnType<typeof setInterval> | null = null
 
   const showError = (error: unknown) => {
     hasError.value = true
     message.error(error)
+  }
+
+  const checkUpdatesSilently = () => {
+    appStore.checkForUpdates(false, true).catch(() => {})
+  }
+
+  const scheduleHourlyUpdateChecks = () => {
+    if (hourlyUpdateTimeout) clearTimeout(hourlyUpdateTimeout)
+    if (hourlyUpdateInterval) clearInterval(hourlyUpdateInterval)
+
+    const now = new Date()
+    const nextHour = new Date(now)
+    nextHour.setHours(now.getHours() + 1, 0, 0, 0)
+    const msUntilNextHour = Math.max(1000, nextHour.getTime() - now.getTime())
+
+    hourlyUpdateTimeout = setTimeout(() => {
+      checkUpdatesSilently()
+      hourlyUpdateInterval = setInterval(checkUpdatesSilently, 60 * 60 * 1000)
+    }, msUntilNextHour)
   }
 
   const hasInstalledCore = async () => {
@@ -64,11 +85,15 @@ export const useAppBootstrap = () => {
       scheduledTasksStore.setupScheduledTasks(),
     ])
 
+    // Self-heal stale app-owned system proxy entries left by unexpected exits.
+    await envStore.healStaleSystemProxyOnStartup().catch(() => {})
+
     const startTime = performance.now()
     percent.value = 20
 
-    // Check for updates once on startup (non-blocking, silent on failure)
-    appStore.checkForUpdates(false, true)
+    // Check for updates once on startup and once every hour on the hour.
+    checkUpdatesSilently()
+    scheduleHourlyUpdateChecks()
 
     if (await IsStartup()) {
       await pluginsStore.onStartupTrigger().catch(showError)

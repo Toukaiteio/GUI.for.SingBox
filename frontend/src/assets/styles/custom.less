@@ -150,10 +150,29 @@ body {
   --hypr-spring: cubic-bezier(0.22, 1.45, 0.36, 1);
 }
 
+/* Configurable per-theme background image layer */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--app-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--app-bg-blur, 0px));
+  opacity: var(--app-bg-opacity, 1);
+  transform: scale(1.08);
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease;
+}
+
 /* Stronger frosted glass on every blurred overlay */
 body .backdrop-blur-sm {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
 }
 
 /* Floating surfaces -> frosted "windows" with a subtle accent border */
@@ -165,8 +184,8 @@ body .backdrop-blur-sm {
 .gui-message,
 .gui-tips,
 .gui-modal-modal {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
   border: 1px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
@@ -253,8 +272,8 @@ body .backdrop-blur-sm {
 .hypr-panel {
   background-color: var(--card-bg);
   color: var(--card-color);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
   border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
 }
 
@@ -441,3 +460,252 @@ body .backdrop-blur-sm {
   border-color: color-mix(in srgb, var(--primary-color) 25%, transparent) !important;
   background-color: var(--card-bg) !important;
 }
+
+/* Bento Grid Redesign for Settings Dialog */
+.profile-form-container {
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 12px;
+    padding: 8px 16px 20px 4px;
+    width: 100%;
+    box-sizing: border-box;
+
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+  }
+
+  .bento-card {
+    grid-column: span 12;
+    background-color: var(--card-bg);
+    border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+
+    .bento-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+      opacity: 0.9;
+    }
+
+    .bento-card-desc {
+      font-size: 11px;
+      color: var(--color);
+      opacity: 0.55;
+      margin-top: -6px;
+      line-height: 1.35;
+    }
+
+    .bento-card-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+
+      // Direct inputs or radios inside bento card contents should not stretch infinitely
+      .gui-input,
+      .gui-select,
+      .gui-radio {
+        width: 100% !important;
+        max-width: 360px !important;
+        box-sizing: border-box;
+      }
+
+      .gui-input-list {
+        width: 100% !important;
+        max-width: 480px !important;
+        box-sizing: border-box;
+      }
+    }
+
+    .form-item {
+      padding: 4px 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+
+      .gui-switch {
+        flex-shrink: 0;
+      }
+
+      &.vertical {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+
+        .form-item-label {
+          font-size: 12px;
+          font-weight: 500;
+          opacity: 0.8;
+          margin-bottom: 2px;
+        }
+
+        .gui-input,
+        .gui-select {
+          width: 100% !important;
+          min-width: 100% !important;
+          max-width: 360px !important;
+          box-sizing: border-box;
+        }
+      }
+    }
+  }
+
+  // Consistent subtle focus states for Inputs inside form container
+  .gui-input {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    &:focus-within {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 6px color-mix(in srgb, var(--primary-color) 25%, transparent) !important;
+    }
+  }
+
+  // Bento decorative divider with button
+  .bento-divider-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+
+    .bento-divider-line {
+      flex: 1;
+      height: 1px;
+      
+      &.left {
+        background: linear-gradient(to right, transparent, color-mix(in srgb, var(--divider-color) 40%, transparent));
+      }
+      
+      &.right {
+        background: linear-gradient(to left, transparent, color-mix(in srgb, var(--divider-color) 40%, transparent));
+      }
+    }
+
+    .bento-divider-btn {
+      flex-shrink: 0;
+      color: var(--primary-color) !important;
+      opacity: 0.8;
+      font-weight: 500;
+      transition: opacity 0.2s ease, transform 0.2s ease !important;
+
+      &:hover {
+        opacity: 1;
+        background-color: transparent !important;
+      }
+    }
+  }
+
+  // Bento expand section transition
+  .bento-expand-wrapper {
+    grid-column: span 12;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+
+    &.expanded {
+      grid-template-rows: 1fr;
+    }
+
+    .bento-expand-inner {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      opacity: 0;
+      transform: translateY(-12px);
+      transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+      padding: 4px 4px 16px 4px; // prevent shadow clipping
+      margin: -4px -4px -16px -4px; // cancel padding layout shift
+    }
+
+    &.expanded .bento-expand-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Global Context Menu & Dropdown Overlay Styling */
+.gui-menu {
+  background: var(--menu-bg);
+  min-width: 142px;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+  box-sizing: border-box;
+
+  .gui-menu-btn {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    height: auto !important;
+    line-height: 1.25 !important;
+    background-color: transparent !important;
+    border: none !important;
+    color: var(--color) !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+    box-sizing: border-box;
+
+    .menu-item-content {
+      color: inherit;
+    }
+
+    &:hover {
+      background-color: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+      color: var(--primary-color) !important;
+
+      .menu-item-icon {
+        color: var(--primary-color) !important;
+        fill: var(--primary-color) !important;
+      }
+    }
+
+    &.menu-item-danger {
+      color: var(--danger-color, #ff4d4f) !important;
+
+      &:hover {
+        background-color: color-mix(in srgb, var(--danger-color, #ff4d4f) 10%, transparent) !important;
+        color: var(--danger-color, #ff4d4f) !important;
+
+        .menu-item-icon {
+          color: var(--danger-color, #ff4d4f) !important;
+          fill: var(--danger-color, #ff4d4f) !important;
+        }
+      }
+    }
+  }
+
+  .menu-separator {
+    height: 1px;
+    background-color: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    margin: 4px 6px;
+  }
+
+  .menu-item-icon {
+    opacity: 0.85;
+    transition: color 0.15s ease, fill 0.15s ease;
+  }
+}
+

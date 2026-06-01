@@ -57,6 +57,10 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     primaryColor: '#000',
     secondaryColor: '#545454',
     fontFamily: DefaultFontFamily,
+    background: {
+      light: { image: '', blur: 0, opacity: 100 },
+      dark: { image: '', blur: 0, opacity: 100 },
+    },
     profilesView: View.Grid,
     subscribesView: View.Grid,
     rulesetsView: View.Grid,
@@ -147,6 +151,12 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
         sources: DefaultPluginHubSources(),
       }
     }
+    if (!settings.background) {
+      settings.background = {
+        light: { image: '', blur: 0, opacity: 100 },
+        dark: { image: '', blur: 0, opacity: 100 },
+      }
+    }
     if (settings.debugUsePointer === undefined) {
       settings.debugUsePointer = false
     }
@@ -171,7 +181,44 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     }, 200)
   }
 
+  const bgImageCache: Recordable<string> = {}
   const applyAppSettings = {
+    async background(background: AppSettings['background']) {
+      const conf = background[themeMode.value === Theme.Dark ? 'dark' : 'light']
+      const style = document.body.style
+      style.setProperty('--app-bg-blur', conf.blur + 'px')
+      style.setProperty('--app-bg-opacity', String(conf.opacity / 100))
+      if (!conf.image) {
+        style.removeProperty('--app-bg-image')
+        return
+      }
+      let src = conf.image
+      if (!/^(https?:|data:)/.test(src)) {
+        const cached = bgImageCache[src]
+        if (cached) {
+          src = cached
+        } else {
+          const b64 = await ignoredError(ReadFile, conf.image, { Mode: 'Binary' })
+          if (!b64) {
+            style.removeProperty('--app-bg-image')
+            return
+          }
+          const ext = conf.image.split('.').pop()?.toLowerCase()
+          const mime =
+            ext === 'jpg' || ext === 'jpeg'
+              ? 'jpeg'
+              : ext === 'webp'
+                ? 'webp'
+                : ext === 'gif'
+                  ? 'gif'
+                  : ext === 'svg'
+                    ? 'svg+xml'
+                    : 'png'
+          src = bgImageCache[conf.image] = `data:image/${mime};base64,${b64}`
+        }
+      }
+      style.setProperty('--app-bg-image', `url("${src}")`)
+    },
     theme(theme: Theme) {
       const isAuto = theme === Theme.Auto
       if (isAuto) {
@@ -217,6 +264,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
   /* Apply AppSettings */
   const onAppSettingsChange = (settings: AppSettings) => {
     applyAppSettings.theme(settings.theme)
+    applyAppSettings.background(settings.background)
     applyAppSettings.lang(settings.lang)
     applyAppSettings.fontFamily(settings.fontFamily)
     applyAppSettings.feature(
@@ -271,6 +319,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     WindowSetSystemDefaultTheme()
   }
   watch(themeMode, setAppTheme, { immediate: true })
+  watch(themeMode, () => applyAppSettings.background(app.value.background))
 
   /* Apply WindowSize */
   const onWindowSizeChange = debounce(async () => {

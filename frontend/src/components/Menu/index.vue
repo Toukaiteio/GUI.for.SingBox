@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, watch, nextTick, useTemplateRef } from 'vu
 import { useI18n } from 'vue-i18n'
 
 import type { Menu } from '@/types/app'
+import { type IconName } from '@/components/Icon/icons'
 
 interface Props {
   position: { x: number; y: number }
@@ -22,6 +23,10 @@ const menuPosition = ref({ left: '', top: '' })
 const secondaryMenuPosition = ref({ left: '', top: '' })
 
 const { t } = useI18n()
+
+const hasIcons = (list?: Menu[]) => {
+  return list ? list.some((item) => item.icon) : false
+}
 
 const handleClick = (fn: Menu) => {
   fn.handler?.()
@@ -116,19 +121,25 @@ onUnmounted(() => document.removeEventListener('click', onClick))
       class="gui-menu fixed z-9999 p-4 rounded-6 shadow flex flex-col gap-4 backdrop-blur-sm"
     >
       <template v-for="menu in menuList">
-        <Divider v-if="menu.separator" :key="menu.label + '_divider'">{{ t(menu.label) }}</Divider>
+        <div v-if="menu.separator" :key="menu.label + '_divider'" class="menu-separator" />
         <Button
           v-else
           :key="menu.label"
           type="text"
           size="small"
+          class="gui-menu-btn"
+          :class="{ 'menu-item-danger': menu.role === 'danger' }"
           @click="handleClick(menu)"
           @mouseenter="handleHover($event, menu)"
         >
-          <div class="text-nowrap">
-            {{ t(menu.label) }}
+          <div class="menu-item-content flex items-center justify-between w-full text-left">
+            <div class="flex items-center gap-10">
+              <Icon v-if="menu.icon" :icon="(menu.icon as IconName)" :size="16" class="menu-item-icon" />
+              <span v-else-if="hasIcons(menuList)" class="w-16 shrink-0"></span>
+              <span class="menu-item-text">{{ t(menu.label) }}</span>
+            </div>
+            <Icon v-if="menu.children" icon="arrowRight" class="ml-12" :size="12" />
           </div>
-          <Icon v-if="menu.children" icon="arrowRight" class="ml-8" />
         </Button>
       </template>
       <Transition name="menu">
@@ -138,18 +149,26 @@ onUnmounted(() => document.removeEventListener('click', onClick))
           :style="secondaryMenuPosition"
           class="gui-menu fixed z-99999 p-4 rounded-6 shadow flex flex-col gap-4 backdrop-blur-sm"
         >
-          <Button
-            v-for="m in secondaryMenu"
-            :key="m.label"
-            type="text"
-            size="small"
-            @click.stop="handleClick(m)"
-          >
-            <Divider v-if="m.separator" :key="m.label + '_divider'" size="small">
-              {{ t(m.label) }}
-            </Divider>
-            <div v-else class="text-nowrap">{{ t(m.label) }}</div>
-          </Button>
+          <template v-for="m in secondaryMenu">
+            <div v-if="m.separator" :key="m.label + '_divider'" class="menu-separator" />
+            <Button
+              v-else
+              :key="m.label"
+              type="text"
+              size="small"
+              class="gui-menu-btn"
+              :class="{ 'menu-item-danger': m.role === 'danger' }"
+              @click.stop="handleClick(m)"
+            >
+              <div class="menu-item-content flex items-center justify-between w-full text-left">
+                <div class="flex items-center gap-10">
+                  <Icon v-if="m.icon" :icon="(m.icon as IconName)" :size="16" class="menu-item-icon" />
+                  <span v-else-if="hasIcons(secondaryMenu)" class="w-16 shrink-0"></span>
+                  <span class="menu-item-text">{{ t(m.label) }}</span>
+                </div>
+              </div>
+            </Button>
+          </template>
         </div>
       </Transition>
     </div>
@@ -160,19 +179,14 @@ onUnmounted(() => document.removeEventListener('click', onClick))
 .menu-enter-active,
 .menu-leave-active {
   transition:
-    transform 0.2s ease-in-out,
-    opacity 0.2s ease-in-out;
+    transform 0.18s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.18s ease-in-out;
   transform-origin: top;
 }
 
 .menu-enter-from,
 .menu-leave-to {
   opacity: 0;
-  transform: scaleY(0);
-}
-
-.gui-menu {
-  background: var(--menu-bg);
-  min-width: 90px;
+  transform: scaleY(0.95);
 }
 </style>

@@ -41,29 +41,65 @@ defineExpose({ handleAdd })
 <template>
   <Tabs v-model:active-key="activeKey" :items="tabs" tab-position="top">
     <template #common>
-      <div class="form-item">
-        {{ t('kernel.route.find_process') }}
-        <Switch v-model="model.find_process" />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.route.auto_detect_interface') }}
-        <Switch v-model="model.auto_detect_interface" />
-      </div>
-      <div v-if="!model.auto_detect_interface" class="form-item">
-        {{ t('kernel.route.default_interface') }}
-        <InterfaceSelect v-model="model.default_interface" clearable />
-      </div>
-      <div class="form-item">
-        {{ t('kernel.route.default_domain_resolver.server') }}
-        <Select v-model="model.default_domain_resolver.server" :options="serverOptions" clearable />
-      </div>
-      <!-- <div class="form-item">
-        {{ t('kernel.route.default_domain_resolver.client_subnet') }}
-        <Input v-model="model.default_domain_resolver.client_subnet" editable />
-      </div> -->
-      <div class="form-item">
-        {{ t('kernel.route.final') }}
-        <Select v-model="model.final" :options="outboundOptions" clearable />
+      <div class="bento-grid">
+        <!-- Card 1: Process & Interface Settings (span-6) -->
+        <div class="bento-card span-6">
+          <div class="bento-card-title">
+            <Icon icon="overview" />
+            Process & Interface
+          </div>
+          <div class="bento-card-desc">
+            Process inspection and network interface detection rules
+          </div>
+          <div class="bento-card-content">
+            <div class="form-item">
+              {{ t('kernel.route.find_process') }}
+              <Switch v-model="model.find_process" />
+            </div>
+            <div class="form-item">
+              {{ t('kernel.route.auto_detect_interface') }}
+              <Switch v-model="model.auto_detect_interface" />
+            </div>
+            <div v-if="!model.auto_detect_interface" class="form-item vertical">
+              <span class="form-item-label">{{ t('kernel.route.default_interface') }}</span>
+              <InterfaceSelect v-model="model.default_interface" clearable />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Domain Resolver (span-6) -->
+        <div class="bento-card span-6">
+          <div class="bento-card-title">
+            <Icon icon="settings" />
+            Domain Resolver
+          </div>
+          <div class="bento-card-desc">
+            Default DNS server used to resolve route rule domains
+          </div>
+          <div class="bento-card-content">
+            <div class="form-item vertical">
+              <span class="form-item-label">{{ t('kernel.route.default_domain_resolver.server') }}</span>
+              <Select v-model="model.default_domain_resolver.server" :options="serverOptions" clearable />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Route Fallback (span-12) -->
+        <div class="bento-card span-12">
+          <div class="bento-card-title">
+            <Icon icon="link" />
+            Default Route Detour
+          </div>
+          <div class="bento-card-desc">
+            Final default outbound detour rules for unmatched traffic
+          </div>
+          <div class="bento-card-content">
+            <div class="form-item vertical">
+              <span class="form-item-label">{{ t('kernel.route.final') }}</span>
+              <Select v-model="model.final" :options="outboundOptions" clearable />
+            </div>
+          </div>
+        </div>
       </div>
     </template>
     <template #rule_set>

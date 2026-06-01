@@ -31,15 +31,15 @@ const kernelApiStore = useKernelApiStore()
 const pluginsStore = usePluginsStore()
 
 const menuList: Menu[] = [
-  'profile.step.general',
-  'profile.step.inbounds',
-  'profile.step.outbounds',
-  'profile.step.route',
-  'profile.step.dns',
-  'profile.step.mixin-script',
+  { label: 'profile.step.general', icon: 'settings' },
+  { label: 'profile.step.inbounds', icon: 'edit' },
+  { label: 'profile.step.outbounds', icon: 'edit' },
+  { label: 'profile.step.route', icon: 'rulesets' },
+  { label: 'profile.step.dns', icon: 'settings' },
+  { label: 'profile.step.mixin-script', icon: 'code' },
 ].map((v, i) => {
   return {
-    label: v,
+    ...v,
     handler: (id: string) => {
       const p = profilesStore.getProfileById(id)
       p && handleShowProfileForm(p.id, i)
@@ -50,6 +50,7 @@ const menuList: Menu[] = [
 const secondaryMenusList: Menu[] = [
   {
     label: 'profiles.start',
+    icon: 'play',
     handler: async (id: string) => {
       appSettingsStore.app.kernel.profile = id
       try {
@@ -66,6 +67,7 @@ const secondaryMenusList: Menu[] = [
   },
   {
     label: 'profiles.copy',
+    icon: 'copy',
     handler: async (id: string) => {
       const p = deepClone(profilesStore.getProfileById(id)!)
       p.id = sampleID()
@@ -76,6 +78,7 @@ const secondaryMenusList: Menu[] = [
   },
   {
     label: 'profiles.copytoClipboard',
+    icon: 'link',
     handler: async (id: string) => {
       const p = profilesStore.getProfileById(id)!
       try {
@@ -91,6 +94,7 @@ const secondaryMenusList: Menu[] = [
   },
   {
     label: 'profiles.generateAndView',
+    icon: 'preview',
     handler: async (id: string) => {
       const p = profilesStore.getProfileById(id)!
       try {
@@ -103,6 +107,7 @@ const secondaryMenusList: Menu[] = [
   },
   {
     label: 'profiles.editSourceFile',
+    icon: 'code',
     handler: async (id: string) => {
       const profile = profilesStore.getProfileById(id)!
       modalApi.setProps({ title: profile.name, width: '90', height: '90' })
@@ -112,21 +117,55 @@ const secondaryMenusList: Menu[] = [
 ]
 
 const generateMenus = (profile: IProfile) => {
+  const isCurrent = appSettingsStore.app.kernel.profile === profile.id
+
   const moreMenus: Menu[] = secondaryMenusList.map((v) => ({
     ...v,
     handler: () => v.handler?.(profile.id),
   }))
-  const builtInMenus: Menu[] = [
-    ...menuList.map((v) => ({ ...v, handler: () => v.handler?.(profile.id) })),
-    {
+
+  const builtInMenus: Menu[] = []
+
+  // 1. Core action: Use / Activate (if not already current)
+  if (!isCurrent) {
+    builtInMenus.push({
+      label: 'common.use',
+      icon: 'play',
+      handler: () => handleUseProfile(profile),
+    })
+    builtInMenus.push({
       label: '',
       separator: true,
-    },
-    {
-      label: 'common.more',
-      children: moreMenus,
-    },
-  ]
+    })
+  }
+
+  // 2. Edit subtabs
+  builtInMenus.push(...menuList.map((v) => ({ ...v, handler: () => v.handler?.(profile.id) })))
+
+  // 3. Divider
+  builtInMenus.push({
+    label: '',
+    separator: true,
+  })
+
+  // 4. More actions sub-menu
+  builtInMenus.push({
+    label: 'common.more',
+    icon: 'more',
+    children: moreMenus,
+  })
+
+  // 5. Danger zone Divider & Delete Action
+  builtInMenus.push({
+    label: '',
+    separator: true,
+  })
+  builtInMenus.push({
+    label: 'common.delete',
+    icon: 'delete',
+    role: 'danger',
+    handler: () => handleDeleteProfile(profile),
+  })
 
   const contextMenus = pluginsStore.plugins.filter(
     (plugin) => Object.keys(plugin.context.profiles).length !== 0,
@@ -144,6 +183,7 @@ const generateMenus = (profile: IProfile) => {
           menus.map(([title, fn]) => {
             return {
               label: title,
+              icon: 'sparkle', // Use custom plugin sparkle icon
               handler: async () => {
                 try {
                   plugin.running = true
@@ -165,7 +205,7 @@ const generateMenus = (profile: IProfile) => {
 }
 
 const handleShowProfileForm = (id?: string, step = 0) => {
-  modalApi.setProps({ minWidth: '70', height: '90' })
+  modalApi.setProps({ width: '90', height: '90' })
   modalApi.setContent(ProfileForm, { id, step }).open()
 }
 
@@ -257,15 +297,25 @@ const onSortUpdate = debounce(profilesStore.saveProfiles, 1000)
         <Dropdown>
           <Button type="link" size="small" icon="more" />
           <template #overlay>
-            <div class="flex flex-col gap-4 min-w-64 p-4">
-              <Button type="text" @click="handleUseProfile(p)">
-                {{ t('common.use') }}
+            <div class="gui-menu flex flex-col gap-4 p-4 min-w-100">
+              <Button type="text" size="small" class="gui-menu-btn" @click="handleUseProfile(p)">
+                <div class="flex items-center gap-10">
+                  <Icon icon="play" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.use') }}</span>
+                </div>
               </Button>
-              <Button type="text" @click="handleShowProfileForm(p.id)">
-                {{ t('common.edit') }}
+              <Button type="text" size="small" class="gui-menu-btn" @click="handleShowProfileForm(p.id)">
+                <div class="flex items-center gap-10">
+                  <Icon icon="edit" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.edit') }}</span>
+                </div>
               </Button>
-              <Button type="text" @click="handleDeleteProfile(p)">
-                {{ t('common.delete') }}
+              <div class="menu-separator" />
+              <Button type="text" size="small" class="gui-menu-btn menu-item-danger" @click="handleDeleteProfile(p)">
+                <div class="flex items-center gap-10">
+                  <Icon icon="delete" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.delete') }}</span>
+                </div>
               </Button>
             </div>
           </template>

@@ -1,20 +1,12 @@
 :root {
   body[theme-mode='light'] {
     .set-theme(light);
-    background-image: linear-gradient(rgba(240, 246, 252, 0.45), rgba(240, 246, 252, 0.5)), url('/imgs/default_bg_light.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    --app-bg-image: url('/imgs/default_bg_light.png');
   }
 
   body[theme-mode='dark'] {
     .set-theme(dark);
-    background-image: linear-gradient(rgba(13, 27, 42, 0.4), rgba(13, 27, 42, 0.45)), url('/imgs/default_bg_dark.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    --app-bg-image: url('/imgs/default_bg_dark.png');
   }
 }
 

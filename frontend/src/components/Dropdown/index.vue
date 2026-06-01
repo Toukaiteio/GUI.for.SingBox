@@ -175,7 +175,7 @@ onUnmounted(() => {
           v-show="show"
           ref="overlayRef"
           :style="overlayStyle"
-          class="gui-dropdown-overlay fixed z-99 rounded-8 backdrop-blur-sm shadow overflow-y-auto"
+          class="gui-dropdown-overlay fixed z-9999 rounded-8 backdrop-blur-sm shadow overflow-y-auto"
           @mouseenter="onOverlayMouseEnter"
           @mouseleave="onOverlayMouseLeave"
           @click.stop

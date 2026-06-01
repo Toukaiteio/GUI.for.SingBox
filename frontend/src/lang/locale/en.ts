@@ -50,6 +50,7 @@ export default {
     downloading: 'Downloading...',
     empty: 'Data is empty',
     pressAgainToClose: 'Press again to close the modal',
+    collapse: 'Collapse',
   },
   kernel: {
     rule: 'Rule',
@@ -635,6 +636,15 @@ export default {
     },
     fontFamily: 'Font-Family',
     resetFont: 'Reset Font-Family',
+    background: {
+      name: 'Background',
+      light: 'Light Theme',
+      dark: 'Dark Theme',
+      image: 'Background Image',
+      imageTip: 'Local path or image URL, empty for default',
+      blur: 'Blur',
+      opacity: 'Opacity',
+    },
     appFolder: {
       name: 'App Folder',
       open: 'Open application folder',

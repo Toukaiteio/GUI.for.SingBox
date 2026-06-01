@@ -82,6 +82,7 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
   })
 
   let runtimeProfile: IProfile | undefined
+  let shouldRestoreSystemProxyOnNextCoreStart: boolean | undefined
 
   const proxies = ref<Record<string, CoreApiProxy>>({})
 
@@ -196,6 +197,17 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     await persistRuntimeProfileChange(field, value)
 
     if (!running.value) return
+
+    if (field === 'tun' && typeof value?.enable === 'boolean' && !value.enable && !envStore.systemProxy) {
+      shouldRestoreSystemProxyOnNextCoreStart = undefined
+      await stopCore()
+      await envStore.updateSystemProxyStatus()
+      return
+    }
+
+    if (field === 'tun' && typeof value?.enable === 'boolean') {
+      shouldRestoreSystemProxyOnNextCoreStart = envStore.systemProxy
+    }
 
     await restartCore(undefined, true)
     await envStore.updateSystemProxyStatus()
@@ -353,7 +365,11 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     initWebsocket()
     await Promise.all([refreshConfig(), refreshProviderProxies()])
 
-    if (appSettingsStore.app.autoSetSystemProxy) {
+    const shouldRestoreSystemProxy =
+      shouldRestoreSystemProxyOnNextCoreStart ?? appSettingsStore.app.autoSetSystemProxy
+    shouldRestoreSystemProxyOnNextCoreStart = undefined
+
+    if (shouldRestoreSystemProxy) {
       await envStore.setSystemProxy().catch((err) => message.error(err))
     }
     await envStore.updateSystemProxyStatus()

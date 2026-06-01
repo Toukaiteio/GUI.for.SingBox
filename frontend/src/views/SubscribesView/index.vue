@@ -27,14 +27,17 @@ import SubscribeScript from './components/SubscribeScript.vue'
 const menuList: Menu[] = [
   {
     label: 'subscribes.editProxies',
+    icon: 'overview',
     handler: (id: string) => handleEditProxies(id),
   },
   {
     label: 'subscribes.editSourceFile',
+    icon: 'code',
     handler: (id: string) => handleEditProxies(id, true),
   },
   {
     label: 'subscribes.copySub',
+    icon: 'copy',
     handler: async (id: string) => {
       const sub = subscribeStore.getSubscribeById(id)!
       if (sub) {
@@ -45,6 +48,7 @@ const menuList: Menu[] = [
   },
   {
     label: 'subscribes.script',
+    icon: 'code',
     handler: async (id: string) => {
       modalApi.setProps({ title: 'common.edit', width: '90' })
       modalApi.setContent(SubscribeScript, { id }).open()
@@ -60,16 +64,64 @@ const appSettingsStore = useAppSettingsStore()
 const pluginsStore = usePluginsStore()
 
 const generateMenus = (subscription: Subscription) => {
-  const builtInMenus: Menu[] = menuList.map((v) => ({
-    ...v,
-    handler: () => v.handler?.(subscription.id),
-  }))
+  const builtInMenus: Menu[] = [
+    // 1. Update action
+    {
+      label: 'common.update',
+      icon: 'refresh',
+      handler: () => handleUpdateSub(subscription),
+    },
+    // 2. Enable/Disable toggle
+    {
+      label: subscription.disabled ? 'common.enable' : 'common.disable',
+      icon: subscription.disabled ? 'selected' : 'disabled',
+      handler: () => handleDisableSub(subscription),
+    },
+    // 3. Edit Details modal
+    {
+      label: 'common.edit',
+      icon: 'edit',
+      handler: () => handleShowSubForm(subscription.id),
+    },
+    // 4. Separator
+    {
+      label: '',
+      separator: true,
+    },
+    // 5. Proxies edit, copy URL, and scripts
+    ...menuList.map((v) => ({
+      ...v,
+      handler: () => v.handler?.(subscription.id),
+    })),
+  ]
 
   const contextMenus = pluginsStore.plugins.filter(
     (plugin) => Object.keys(plugin.context.subscriptions).length !== 0,
   )
 
   if (contextMenus.length !== 0) {
+    const moreMenus: Menu[] = contextMenus.reduce((prev, plugin) => {
+      const menus = Object.entries(plugin.context.subscriptions)
+      return prev.concat(
+        menus.map(([title, fn]) => {
+          return {
+            label: title,
+            icon: 'sparkle',
+            handler: async () => {
+              try {
+                plugin.running = true
+                await pluginsStore.manualTrigger(plugin.id, fn as any, subscription)
+              } catch (error: any) {
+                message.error(error)
+              } finally {
+                plugin.running = false
+              }
+            },
+          }
+        }),
+      )
+    }, [] as Menu[])
+
     builtInMenus.push(
       {
         label: '',
@@ -77,29 +129,25 @@ const generateMenus = (subscription: Subscription) => {
       },
       {
         label: 'common.more',
-        children: contextMenus.reduce((prev, plugin) => {
-          const menus = Object.entries(plugin.context.subscriptions)
-          return prev.concat(
-            menus.map(([title, fn]) => {
-              return {
-                label: title,
-                handler: async () => {
-                  try {
-                    plugin.running = true
-                    await pluginsStore.manualTrigger(plugin.id, fn as any, subscription)
-                  } catch (error: any) {
-                    message.error(error)
-                  } finally {
-                    plugin.running = false
-                  }
-                },
-              }
-            }),
-          )
-        }, [] as Menu[]),
+        icon: 'more',
+        children: moreMenus,
       },
     )
   }
+
+  // 6. Danger zone Divider & Delete Action
+  builtInMenus.push(
+    {
+      label: '',
+      separator: true,
+    },
+    {
+      label: 'common.delete',
+      icon: 'delete',
+      role: 'danger',
+      handler: () => handleDeleteSub(subscription),
+    },
+  )
 
   return builtInMenus
 }
@@ -233,23 +281,53 @@ const onSortUpdate = debounce(subscribeStore.saveSubscribes, 1000)
         <Dropdown>
           <Button type="link" size="small" icon="more" />
           <template #overlay>
-            <div class="flex flex-col gap-4 min-w-64 p-4">
+            <div class="gui-menu flex flex-col gap-4 p-4 min-w-100">
               <Button
                 :disabled="s.disabled"
                 :loading="s.updating"
-                :type="s.disabled ? 'text' : 'text'"
+                type="text"
+                size="small"
+                class="gui-menu-btn"
                 @click="handleUpdateSub(s)"
               >
-                {{ t('common.update') }}
+                <div class="flex items-center gap-10">
+                  <Icon icon="refresh" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.update') }}</span>
+                </div>
               </Button>
-              <Button type="text" @click="handleDisableSub(s)">
-                {{ s.disabled ? t('common.enable') : t('common.disable') }}
+              <Button
+                type="text"
+                size="small"
+                class="gui-menu-btn"
+                @click="handleDisableSub(s)"
+              >
+                <div class="flex items-center gap-10">
+                  <Icon :icon="s.disabled ? 'selected' : 'disabled'" :size="16" class="menu-item-icon" />
+                  <span>{{ s.disabled ? t('common.enable') : t('common.disable') }}</span>
+                </div>
               </Button>
-              <Button type="text" @click="handleShowSubForm(s.id)">
-                {{ t('common.edit') }}
+              <Button
+                type="text"
+                size="small"
+                class="gui-menu-btn"
+                @click="handleShowSubForm(s.id)"
+              >
+                <div class="flex items-center gap-10">
+                  <Icon icon="edit" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.edit') }}</span>
+                </div>
               </Button>
-              <Button type="text" @click="handleDeleteSub(s)">
-                {{ t('common.delete') }}
+              <div class="menu-separator" />
+              <Button
+                type="text"
+                size="small"
+                class="gui-menu-btn menu-item-danger"
+                @click="handleDeleteSub(s)"
+              >
+                <div class="flex items-center gap-10">
+                  <Icon icon="delete" :size="16" class="menu-item-icon" />
+                  <span>{{ t('common.delete') }}</span>
+                </div>
               </Button>
             </div>
           </template>

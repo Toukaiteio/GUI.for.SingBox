@@ -96,9 +96,10 @@ const serverOptions = computed(() =>
 
 const generalConfig = computed({
   get() {
-    return { log: profile.value.log, experimental: profile.value.experimental }
+    return { name: profile.value.name, log: profile.value.log, experimental: profile.value.experimental }
   },
-  set({ log, experimental }) {
+  set({ name, log, experimental }) {
+    profile.value.name = name
     profile.value.log = log
     profile.value.experimental = experimental
   },
@@ -214,13 +215,7 @@ defineExpose({ modalSlots })
       class="h-full"
     >
       <template #general>
-        <div class="pr-8">
-          <div class="form-item">
-            {{ t('profile.name') }}
-            <Input v-model="profile.name" autofocus :placeholder="t('profile.name')" />
-          </div>
-          <GeneralConfig v-model="generalConfig" :outbound-options="outboundOptions" />
-        </div>
+        <GeneralConfig v-model="generalConfig" :outbound-options="outboundOptions" />
       </template>
       <template #inbounds>
         <div class="pr-8">

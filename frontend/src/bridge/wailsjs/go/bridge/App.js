@@ -62,6 +62,10 @@ export function MoveFile(arg1, arg2) {
   return window['go']['bridge']['App']['MoveFile'](arg1, arg2);
 }
 
+export function OpenDevTools() {
+  return window['go']['bridge']['App']['OpenDevTools']();
+}
+
 export function OpenDir(arg1) {
   return window['go']['bridge']['App']['OpenDir'](arg1);
 }

@@ -35,6 +35,8 @@ export interface TrayContent {
 
 export interface Menu {
   label: string
+  icon?: string
+  role?: 'danger' | 'warning' | string
   handler?: (...args: any) => void
   separator?: boolean
   children?: Menu[]
@@ -58,6 +60,10 @@ export interface AppSettings {
   primaryColor: string
   secondaryColor: string
   fontFamily: string
+  background: {
+    light: { image: string; blur: number; opacity: number }
+    dark: { image: string; blur: number; opacity: number }
+  }
   profilesView: View
   subscribesView: View
   rulesetsView: View

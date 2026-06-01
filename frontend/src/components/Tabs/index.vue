@@ -47,6 +47,15 @@ const activeBgStyle = ref({
   width: '0px',
   opacity: 0,
 })
+let rafId: number | null = null
+
+const scheduleUpdateActiveBg = () => {
+  if (rafId !== null) return
+  rafId = requestAnimationFrame(() => {
+    rafId = null
+    updateActiveBg()
+  })
+}
 
 const updateActiveBg = () => {
   if (isTop.value) return
@@ -58,26 +67,35 @@ const updateActiveBg = () => {
   const el = tabRefs.value[activeIndex]
   if (el) {
     const domEl = el.$el || el
-    activeBgStyle.value = {
+    const nextStyle = {
       transform: `translateY(${domEl.offsetTop}px)`,
       height: `${domEl.offsetHeight}px`,
       width: `${domEl.offsetWidth}px`,
       opacity: 1,
     }
+    if (
+      activeBgStyle.value.transform !== nextStyle.transform
+      || activeBgStyle.value.height !== nextStyle.height
+      || activeBgStyle.value.width !== nextStyle.width
+      || activeBgStyle.value.opacity !== nextStyle.opacity
+    ) {
+      activeBgStyle.value = nextStyle
+    }
   }
 }
 
 watch(() => props.activeKey, () => {
-  nextTick(updateActiveBg)
+  nextTick(scheduleUpdateActiveBg)
 })
 
 onMounted(() => {
-  setTimeout(updateActiveBg, 150)
-  window.addEventListener('resize', updateActiveBg)
+  setTimeout(scheduleUpdateActiveBg, 150)
+  window.addEventListener('resize', scheduleUpdateActiveBg, { passive: true })
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateActiveBg)
+  if (rafId !== null) cancelAnimationFrame(rafId)
+  window.removeEventListener('resize', scheduleUpdateActiveBg)
 })
 </script>
 

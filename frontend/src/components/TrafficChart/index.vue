@@ -23,6 +23,7 @@ const points = ref<string[]>([])
 const fillPaths = ref<string[]>([])
 const showLines = ref([true, true])
 const fillColors = ['url(#hypr-grad-up)', 'url(#hypr-grad-down)']
+let chartRafId: number | null = null
 
 const strokeColors = computed(() => {
   const upload = showLines.value[0] ? 'var(--primary-color)' : 'var(--color)'
@@ -41,9 +42,18 @@ const maxValue = computed(() => {
 
 const updateSvgWidth = () => {
   if (svgRef.value) {
-    width.value = svgRef.value.clientWidth
-    updateChart()
+    const nextWidth = svgRef.value.clientWidth
+    if (width.value !== nextWidth) width.value = nextWidth
+    scheduleUpdateChart()
   }
+}
+
+const scheduleUpdateChart = () => {
+  if (chartRafId !== null) return
+  chartRafId = requestAnimationFrame(() => {
+    chartRafId = null
+    updateChart()
+  })
 }
 
 const updateChart = () => {
@@ -101,26 +111,28 @@ const updateChart = () => {
 
 const toggleUpload = () => {
   showLines.value[0] = !showLines.value[0]
-  updateChart()
+  scheduleUpdateChart()
 }
 
 const toggleDownload = () => {
   showLines.value[1] = !showLines.value[1]
-  updateChart()
+  scheduleUpdateChart()
 }
 
 onMounted(() => {
   updateSvgWidth()
-  window.addEventListener('resize', updateSvgWidth)
+  window.addEventListener('resize', updateSvgWidth, { passive: true })
 })
 
 onUnmounted(() => {
+  if (chartRafId !== null) cancelAnimationFrame(chartRafId)
   window.removeEventListener('resize', updateSvgWidth)
 })
 
-onActivated(updateSvgWidth)
+onActivated(() => updateSvgWidth())
 
-watch(() => props.series, updateChart, { deep: true })
+watch(() => props.series, scheduleUpdateChart, { deep: true })
+watch(showLines, scheduleUpdateChart, { deep: true })
 </script>
 
 <template>

@@ -38,6 +38,15 @@ const activeBgStyle = ref({
   height: '0px',
   opacity: 0,
 })
+let activeBgRafId: number | null = null
+
+const scheduleUpdateActiveBg = () => {
+  if (activeBgRafId !== null) return
+  activeBgRafId = requestAnimationFrame(() => {
+    activeBgRafId = null
+    updateActiveBg()
+  })
+}
 
 const updateActiveBg = () => {
   const activeIndex = ModeOptions.findIndex(m => m.value === kernelApiStore.config.mode)
@@ -48,21 +57,28 @@ const updateActiveBg = () => {
   const el = modeRefs.value[activeIndex]
   if (el) {
     const domEl = el.$el || el
-    activeBgStyle.value = {
+    const nextStyle = {
       transform: `translateY(${domEl.offsetTop}px)`,
       height: `${domEl.offsetHeight}px`,
       opacity: 1,
+    }
+    if (
+      activeBgStyle.value.transform !== nextStyle.transform
+      || activeBgStyle.value.height !== nextStyle.height
+      || activeBgStyle.value.opacity !== nextStyle.opacity
+    ) {
+      activeBgStyle.value = nextStyle
     }
   }
 }
 
 watch(() => kernelApiStore.config.mode, () => {
-  nextTick(updateActiveBg)
+  nextTick(scheduleUpdateActiveBg)
 })
 
 onMounted(() => {
-  setTimeout(updateActiveBg, 150) // Small delay to ensure layout has computed
-  window.addEventListener('resize', updateActiveBg)
+  setTimeout(scheduleUpdateActiveBg, 150) // Small delay to ensure layout has computed
+  window.addEventListener('resize', scheduleUpdateActiveBg, { passive: true })
 })
 
 const modeIcon = (v: string) =>
@@ -190,7 +206,8 @@ onUnmounted(() => {
   unregisterMemoryHandler()
   unregisterTrafficHandler()
   unregisterConnectionsHandler()
-  window.removeEventListener('resize', updateActiveBg)
+  if (activeBgRafId !== null) cancelAnimationFrame(activeBgRafId)
+  window.removeEventListener('resize', scheduleUpdateActiveBg)
 })
 </script>
 
