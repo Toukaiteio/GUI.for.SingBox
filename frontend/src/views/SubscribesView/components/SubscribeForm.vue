@@ -2,7 +2,7 @@
 import { ref, inject, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { HttpGet } from '@/bridge'
+import { HttpGet, RemoveFile } from '@/bridge'
 import {
   DefaultTestTimeout,
   DefaultTestURL,
@@ -10,11 +10,19 @@ import {
   RequestProxyModeOptions,
 } from '@/constant/app'
 import { RequestProxyMode } from '@/enums/app'
+import { Outbound } from '@/enums/kernel'
 import { useBool } from '@/hooks'
-import { useSubscribesStore } from '@/stores'
-import { deepClone, GetRequestProxy, message } from '@/utils'
+import {
+  useAppSettingsStore,
+  useAppStore,
+  useKernelApiStore,
+  useProfilesStore,
+  useSubscribesStore,
+} from '@/stores'
+import { alert, confirm, deepClone, GetRequestProxy, ignoredError, message, modal } from '@/utils'
 
 import Button from '@/components/Button/index.vue'
+import ProfileForm from '@/views/ProfilesView/components/ProfileForm.vue'
 
 import type { Subscription } from '@/types/app'
 
@@ -26,11 +34,16 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 const [showMore, toggleShowMore] = useBool(false)
+const appSettingsStore = useAppSettingsStore()
+const appStore = useAppStore()
+const kernelApiStore = useKernelApiStore()
+const profilesStore = useProfilesStore()
 const subscribeStore = useSubscribesStore()
 
 const loading = ref(false)
 const proxyTesting = ref(false)
 const sub = ref<Subscription>(subscribeStore.getSubscribeTemplate())
+const profileOutboundsStep = 2
 
 const isManual = computed(() => sub.value.type === 'Manual')
 const isRemote = computed(() => sub.value.type === 'Http')
@@ -40,17 +53,105 @@ const showProxyTest = computed(() => sub.value.requestProxyMode !== RequestProxy
 const handleCancel = inject('cancel') as any
 const handleSubmit = inject('submit') as any
 
+const showAttachGuide = async () => {
+  if (props.id || appSettingsStore.app.subscriptionNodeListGuideShown) return
+
+  appSettingsStore.app.subscriptionNodeListGuideShown = true
+
+  const currentProfile = profilesStore.currentProfile
+  if (!currentProfile) {
+    await alert(
+      'subscribes.attachGuide.title',
+      t('subscribes.attachGuide.noProfileMessage', {
+        subscription: sub.value.name,
+      }),
+      { type: 'markdown' },
+    )
+    return
+  }
+
+  try {
+    await confirm(
+      'subscribes.attachGuide.title',
+      t('subscribes.attachGuide.currentProfileMessage', {
+        subscription: sub.value.name,
+        profile: currentProfile.name,
+      }),
+      {
+        type: 'markdown',
+        cancelText: 'subscribes.attachGuide.later',
+        okText: 'subscribes.attachGuide.openCurrentProfile',
+      },
+    )
+  } catch {
+    return
+  }
+
+  let profileModal: ReturnType<typeof modal> | undefined
+  const targetOutbound = currentProfile.outbounds.find((outbound) =>
+    [Outbound.Selector, Outbound.Urltest].includes(outbound.type as any),
+  )
+  if (!targetOutbound) {
+    await alert(
+      'subscribes.attachGuide.title',
+      t('subscribes.attachGuide.noOutboundMessage', {
+        subscription: sub.value.name,
+        profile: currentProfile.name,
+      }),
+      { type: 'markdown' },
+    )
+    return
+  }
+
+  appStore.startSubscriptionAttachGuide({
+    subscriptionId: sub.value.id,
+    subscriptionName: sub.value.name,
+    profileId: currentProfile.id,
+    profileName: currentProfile.name,
+    outboundId: targetOutbound.id,
+    outboundTag: targetOutbound.tag,
+  })
+
+  profileModal = modal({
+    width: '90',
+    height: '90',
+    afterClose: () => {
+      if (appStore.subscriptionAttachGuide.active && !kernelApiStore.needRestart) {
+        appStore.stopSubscriptionAttachGuide()
+      }
+      profileModal?.destroy()
+    },
+  })
+  profileModal.setContent(ProfileForm, {
+    id: currentProfile.id,
+    step: profileOutboundsStep,
+  })
+  profileModal.open()
+}
+
 const handleSave = async () => {
   loading.value = true
 
   try {
+    let shouldShowAttachGuide = false
     if (props.id) {
       await subscribeStore.editSubscribe(props.id, sub.value)
     } else {
       await subscribeStore.addSubscribe(sub.value)
+      if (sub.value.type !== 'Manual') {
+        await subscribeStore.updateSubscribe(sub.value.id)
+        shouldShowAttachGuide = true
+      }
     }
     await handleSubmit()
+    if (shouldShowAttachGuide) {
+      await showAttachGuide()
+    }
   } catch (error: any) {
+    if (!props.id) {
+      await ignoredError(RemoveFile, sub.value.path)
+      await subscribeStore.deleteSubscribe(sub.value.id)
+    }
     console.error(error)
     message.error(error)
   }

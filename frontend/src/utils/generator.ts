@@ -103,6 +103,28 @@ const generateOutbounds = async (outbounds: IOutbound[]) => {
 
   const subscribesStore = useSubscribesStore()
 
+  const getSubscriptionCache = async (subId: string) => {
+    if (SubscriptionCache[subId]) {
+      return SubscriptionCache[subId]!
+    }
+
+    const sub = subscribesStore.getSubscribeById(subId)
+    if (!sub) {
+      SubscriptionCache[subId] = []
+      return SubscriptionCache[subId]!
+    }
+
+    try {
+      const subStr = await ReadFile(sub.path)
+      const proxies = JSON.parse(subStr)
+      SubscriptionCache[subId] = Array.isArray(proxies) ? proxies : []
+    } catch (error: any) {
+      throw `Failed to read subscription cache [${sub.name}]. Reason: ${error?.message || error}`
+    }
+
+    return SubscriptionCache[subId]!
+  }
+
   for (const outbound of outbounds) {
     const _outbound: Recordable = {
       type: outbound.type,
@@ -125,21 +147,14 @@ const generateOutbounds = async (outbounds: IOutbound[]) => {
           _outbound.outbounds.push(proxy.tag)
         } else {
           const subId = proxy.type === 'Subscription' ? proxy.id : proxy.type
-          if (!SubscriptionCache[subId]) {
-            const sub = subscribesStore.getSubscribeById(subId)
-            if (sub) {
-              const subStr = await ReadFile(sub.path)
-              const proxies = JSON.parse(subStr)
-              SubscriptionCache[subId] = proxies
-            }
-          }
+          const subscriptionCache = await getSubscriptionCache(subId)
           if (proxy.type === 'Subscription') {
             _outbound.outbounds.push(
-              ...SubscriptionCache[subId]!.map((v) => v.tag).filter((tag) => isTagMatching(tag)),
+              ...subscriptionCache.map((v) => v.tag).filter((tag) => isTagMatching(tag)),
             )
-            SubscriptionCache[subId]!.forEach((v) => proxiesSet.add(v))
+            subscriptionCache.forEach((v) => proxiesSet.add(v))
           } else {
-            const _proxy = SubscriptionCache[subId]!.find((v) => v.tag === proxy.tag)
+            const _proxy = subscriptionCache.find((v) => v.tag === proxy.tag)
             if (_proxy && isTagMatching(_proxy.tag)) {
               _outbound.outbounds.push(_proxy.tag)
               proxiesSet.add(_proxy)

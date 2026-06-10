@@ -402,6 +402,26 @@ body .backdrop-blur-sm {
   background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
 }
 
+.guide-highlight {
+  position: relative;
+  z-index: 3;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--primary-color) 90%, white 10%),
+    0 0 0 6px color-mix(in srgb, var(--primary-color) 28%, transparent),
+    0 0 20px color-mix(in srgb, var(--primary-color) 50%, transparent);
+  animation: guide-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes guide-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
 /* Subscribes, Rulesets, and Tasks active (enabled) styles */
 .subscribes-list-container .gui-card:not(.card-disabled),
 .rulesets-list-container .gui-card:not(.card-disabled),
@@ -708,4 +728,3 @@ body .backdrop-blur-sm {
     transition: color 0.15s ease, fill 0.15s ease;
   }
 }
-

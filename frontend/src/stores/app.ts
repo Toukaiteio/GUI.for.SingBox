@@ -31,6 +31,18 @@ import { useEnvStore } from './env'
 import { useAppSettingsStore } from './appSettings'
 
 export const useAppStore = defineStore('app', () => {
+  type SubscriptionAttachGuideStep = 2 | 3 | 4
+  interface SubscriptionAttachGuideState {
+    active: boolean
+    step: SubscriptionAttachGuideStep
+    subscriptionId: string
+    subscriptionName: string
+    profileId: string
+    profileName: string
+    outboundId: string
+    outboundTag: string
+  }
+
   const isAppExiting = ref(false)
   const isAppReloading = ref(false)
 
@@ -53,6 +65,36 @@ export const useAppStore = defineStore('app', () => {
   /* Modal Stack */
   const modalStack: (() => void)[] = []
   const modalZIndexCounter = 999
+
+  const getSubscriptionAttachGuideTemplate = (): SubscriptionAttachGuideState => ({
+    active: false,
+    step: 2,
+    subscriptionId: '',
+    subscriptionName: '',
+    profileId: '',
+    profileName: '',
+    outboundId: '',
+    outboundTag: '',
+  })
+  const subscriptionAttachGuide = ref<SubscriptionAttachGuideState>(
+    getSubscriptionAttachGuideTemplate(),
+  )
+  const startSubscriptionAttachGuide = (
+    payload: Omit<SubscriptionAttachGuideState, 'active' | 'step'>,
+  ) => {
+    subscriptionAttachGuide.value = {
+      active: true,
+      step: 2,
+      ...payload,
+    }
+  }
+  const setSubscriptionAttachGuideStep = (step: SubscriptionAttachGuideStep) => {
+    if (!subscriptionAttachGuide.value.active) return
+    subscriptionAttachGuide.value.step = step
+  }
+  const stopSubscriptionAttachGuide = () => {
+    subscriptionAttachGuide.value = getSubscriptionAttachGuideTemplate()
+  }
 
   /* i18n */
   const localesLoading = ref(false)
@@ -229,6 +271,10 @@ export const useAppStore = defineStore('app', () => {
     tipsPosition,
     modalStack,
     modalZIndexCounter,
+    subscriptionAttachGuide,
+    startSubscriptionAttachGuide,
+    setSubscriptionAttachGuideStep,
+    stopSubscriptionAttachGuide,
     showAbout,
     checkForUpdatesLoading,
     restartable,

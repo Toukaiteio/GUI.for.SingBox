@@ -14,6 +14,7 @@ import {
   BrowserOpenURL,
   MakeDir,
   FileExists,
+  ReadDir,
   OpenDir,
 } from '@/bridge'
 import { CoreWorkingDirectory } from '@/constant/kernel'
@@ -72,6 +73,25 @@ export const useCoreBranch = (isAlpha = false) => {
   const CoreFilePath = `${CoreWorkingDirectory}/${getKernelFileName(isAlpha)}`
   const CoreBakFilePath = `${CoreFilePath}.bak`
 
+  const mergeDirectoryContents = async (source: string, target: string) => {
+    await MakeDir(target)
+
+    const entries = await ReadDir(source)
+    for (const entry of entries) {
+      const sourcePath = `${source}/${entry.name}`
+      const targetPath = `${target}/${entry.name}`
+
+      if (entry.isDir) {
+        await mergeDirectoryContents(sourcePath, targetPath)
+        await RemoveFile(sourcePath)
+        continue
+      }
+
+      await ignoredError(RemoveFile, targetPath)
+      await MoveFile(sourcePath, targetPath)
+    }
+  }
+
   const downloadCore = async () => {
     downloading.value = true
     downloadProgress.value = ''
@@ -116,19 +136,17 @@ export const useCoreBranch = (isAlpha = false) => {
         { CancelId: downloadCacheFile },
       )
 
-      const stableFileName = getKernelFileName()
-
       await ignoredError(MoveFile, CoreFilePath, CoreBakFilePath)
 
       if (assetName.endsWith('.zip')) {
         await UnzipZIPFile(downloadCacheFile, 'data/.cache')
         const tmpPath = `data/.cache/${assetName.replace('.zip', '')}`
-        await MoveFile(`${tmpPath}/${stableFileName}`, CoreFilePath)
+        await mergeDirectoryContents(tmpPath, CoreWorkingDirectory)
         await RemoveFile(tmpPath)
       } else if (assetName.endsWith('.tar.gz')) {
         await UnzipTarGZFile(downloadCacheFile, 'data/.cache')
         const tmpPath = `data/.cache/${assetName.replace('.tar.gz', '')}`
-        await MoveFile(`${tmpPath}/${stableFileName}`, CoreFilePath)
+        await mergeDirectoryContents(tmpPath, CoreWorkingDirectory)
         await RemoveFile(tmpPath)
       }
 

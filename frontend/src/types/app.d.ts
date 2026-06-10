@@ -83,6 +83,7 @@ export interface AppSettings {
   autoStartKernel: boolean
   autoRestartKernel: boolean
   userAgent: string
+  subscriptionNodeListGuideShown: boolean
   startupDelay: number
   connections: {
     visibility: Record<string, boolean>

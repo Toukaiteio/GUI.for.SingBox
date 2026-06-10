@@ -443,6 +443,23 @@ export default {
     editSourceFile: 'Edit Proxies(Source)',
     copySub: 'Copy Link',
     script: 'Script',
+    attachGuide: {
+      title: 'Subscription Imported',
+      later: 'Later',
+      openCurrentProfile: 'Open Current Profile',
+      noOutboundMessage:
+        'Subscription **{subscription}** was imported successfully.\n\nThe current profile **{profile}** does not have a `Selector` or `URLTest` group yet, so there is no edit target to highlight. Create one in **Outbounds** first, then add this subscription into it.',
+      currentProfileMessage:
+        'Subscription **{subscription}** was imported successfully.\n\nTo add it into the current node list:\n\n1. Open the current profile **{profile}** and go to **Outbounds**\n2. Edit a `Selector` or `URLTest` group; create one with the top-right `+` button if needed\n3. In the **Subscriptions** section, click **{subscription}**\n4. Save the profile, then return to the home page to switch nodes from this subscription',
+      noProfileMessage:
+        'Subscription **{subscription}** was imported successfully.\n\nThere is no active profile yet. Create or select a profile first, then go to **Outbounds** and add this subscription into a `Selector` or `URLTest` group.',
+      step2Message: 'Step 2: Click the highlighted edit button for "{outbound}"',
+      step3Message: 'Step 3: Click the highlighted subscription item "{subscription}"',
+      step4PendingMessage:
+        'Step 4: Save the profile now. A highlighted Restart Core button will appear at the bottom-right afterward',
+      step4Message:
+        'Step 4: After saving the profile, click the highlighted Restart Core button at the bottom-right to apply the change',
+    },
     proxies: {
       type: 'Protocol',
       name: 'Name',

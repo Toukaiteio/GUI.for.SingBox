@@ -80,6 +80,7 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     autoStartKernel: false,
     autoRestartKernel: false,
     userAgent: '',
+    subscriptionNodeListGuideShown: false,
     startupDelay: 30,
     connections: DefaultConnections(),
     kernel: {
@@ -142,6 +143,9 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
     }
     if (!settings.requestProxyMode) {
       settings.requestProxyMode = RequestProxyMode.System
+    }
+    if (settings.subscriptionNodeListGuideShown === undefined) {
+      settings.subscriptionNodeListGuideShown = false
     }
     if (settings.customProxy === undefined) {
       settings.customProxy = ''

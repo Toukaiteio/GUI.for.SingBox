@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { DraggableOptions } from '@/constant/app'
 import { OutboundOptions, BuiltInOutbound } from '@/constant/kernel'
 import { DefaultOutbound } from '@/constant/profile'
 import { Outbound } from '@/enums/kernel'
-import { useSubscribesStore } from '@/stores'
+import { useAppStore, useSubscribesStore } from '@/stores'
 import { deepClone, message } from '@/utils'
 
 const model = defineModel<IProfile['outbounds']>({ required: true })
@@ -36,7 +36,14 @@ const proxyGroup = ref([
 const fields = ref<IOutbound>(DefaultOutbound())
 
 const { t } = useI18n()
+const appStore = useAppStore()
 const subscribesStore = useSubscribesStore()
+const guideTargetSubscriptionRef = ref<HTMLElement | null>(null)
+const guide = computed(() => appStore.subscriptionAttachGuide)
+const guideOutboundId = computed(() => guide.value.outboundId)
+const guideSubscriptionId = computed(() => guide.value.subscriptionId)
+const isGuideStep2 = computed(() => guide.value.active && guide.value.step === 2)
+const isGuideStep3 = computed(() => guide.value.active && guide.value.step === 3)
 
 const handleAdd = () => {
   updateGroupId = -1
@@ -92,20 +99,35 @@ const handleAddEnd = () => {
 }
 
 const handleEditGroup = (index: number) => {
+  const outbound = model.value[index]!
   updateGroupId = index
-  fields.value = deepClone(model.value[index]!)
+  fields.value = deepClone(outbound)
   showEditModal.value = true
+  if (guide.value.active && guide.value.step === 2 && outbound.id === guideOutboundId.value) {
+    appStore.setSubscriptionAttachGuideStep(3)
+  }
 }
 
 const handleAddProxy = (groupID: string, proxyID: string, proxyName: string) => {
   // self
   if (groupID === 'Built-in' && proxyID === fields.value.id) return
 
+  const wasInUse = !!fields.value.outbounds.find((outbound) => outbound.id === proxyID)
   const idx = fields.value.outbounds.findIndex((outbound) => outbound.id === proxyID)
   if (idx !== -1) {
     fields.value.outbounds.splice(idx, 1)
   } else {
     fields.value.outbounds.push({ id: proxyID, tag: proxyName, type: groupID })
+  }
+
+  if (
+    guide.value.active &&
+    guide.value.step === 3 &&
+    groupID === 'Subscription' &&
+    proxyID === guideSubscriptionId.value &&
+    !wasInUse
+  ) {
+    appStore.setSubscriptionAttachGuideStep(4)
   }
 }
 
@@ -179,6 +201,25 @@ const showLost = () => message.warn('kernel.outbounds.notFound')
 
 const showNeedToAdd = () => message.error('kernel.outbounds.needToAdd')
 
+const setGuideTargetSubscriptionRef = (el: any, groupID: string, proxyID: string) => {
+  if (groupID === 'Subscription' && proxyID === guideSubscriptionId.value) {
+    guideTargetSubscriptionRef.value = (el?.$el || el) as HTMLElement | null
+  }
+}
+
+watch(
+  [() => showEditModal.value, () => guide.value.step, () => guide.value.active],
+  async ([open, step, active]) => {
+    if (!open || !active || step !== 3) return
+    expandedSet.value.add('Subscription')
+    await nextTick()
+    guideTargetSubscriptionRef.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  },
+)
+
 subscribesStore.subscribes.forEach(async ({ id, name, proxies }) => {
   proxyGroup.value[1]!.proxies.push({ id, tag: name, type: 'Subscribe' })
   proxyGroup.value.push({ id, name, proxies })
@@ -229,7 +270,15 @@ subscribesStore.subscribes.forEach(async ({ id, name, proxies }) => {
           <Button v-if="hasLost(outbound)" type="text" @click="handleClearGroup(outbound)">
             {{ t('common.clear') }}
           </Button>
-          <Button icon="edit" type="text" size="small" @click="handleEditGroup(index)" />
+          <Button
+            :class="{
+              'guide-highlight': isGuideStep2 && outbound.id === guideOutboundId,
+            }"
+            icon="edit"
+            type="text"
+            size="small"
+            @click="handleEditGroup(index)"
+          />
           <Button icon="delete" type="text" size="small" @click="handleDeleteGroup(index)" />
         </div>
       </div>
@@ -343,6 +392,10 @@ subscribesStore.subscribes.forEach(async ({ id, name, proxies }) => {
               <Button
                 v-for="proxy in group.proxies"
                 :key="proxy.id"
+                :ref="(el) => setGuideTargetSubscriptionRef(el, group.id, proxy.id)"
+                :class="{
+                  'guide-highlight': isGuideStep3 && group.id === 'Subscription' && proxy.id === guideSubscriptionId,
+                }"
                 :type="isInuse(group.id, proxy.id) ? 'link' : 'text'"
                 @click="handleAddProxy(group.id, proxy.id, proxy.tag)"
               >

@@ -443,6 +443,21 @@ export default {
     editSourceFile: '编辑节点(源文件)',
     copySub: '复制订阅链接',
     script: '脚本',
+    attachGuide: {
+      title: '订阅已导入',
+      later: '稍后',
+      openCurrentProfile: '现在去配置',
+      noOutboundMessage:
+        '已成功导入订阅 **{subscription}**。\n\n当前配置 **{profile}** 里还没有 `Selector` 或 `URLTest` 策略组，因此暂时没有可高亮的编辑入口。请先在“出站设置”中新建一个策略组，再把这个订阅加入进去。',
+      currentProfileMessage:
+        '已成功导入订阅 **{subscription}**。\n\n要把它加入当前节点列表，请按下面操作：\n\n1. 打开当前配置 **{profile}** 的“出站设置”\n2. 编辑一个 `Selector` 或 `URLTest` 策略组；如果还没有，先点右上角 `+` 新建\n3. 在“订阅”分组里点选 **{subscription}**\n4. 保存配置，回到首页即可在节点列表里切换这个订阅',
+      noProfileMessage:
+        '已成功导入订阅 **{subscription}**。\n\n当前还没有正在使用的配置。后续请先到“配置”页新建或选择一个配置，再进入“出站设置”，把这个订阅加入 `Selector` 或 `URLTest` 策略组。',
+      step2Message: '第二步：点击高亮的编辑按钮，进入策略组“{outbound}”',
+      step3Message: '第三步：点击高亮的订阅对象“{subscription}”',
+      step4PendingMessage: '第四步：现在点保存。保存后，屏幕右下角会出现高亮的“重启核心”按钮',
+      step4Message: '第四步：保存配置后，点击屏幕右下角高亮的“重启核心”按钮使更改生效',
+    },
     proxies: {
       type: '协议',
       name: '名称',
