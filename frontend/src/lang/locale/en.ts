@@ -437,10 +437,13 @@ export default {
     subtype: 'Subscription Type',
     website: 'Website',
     empty: 'The subscription list is empty. Please{action}a subscription first.',
-    enterLink: 'Enter subscription link',
-    proxyCount: 'Proxy Count',
-    editProxies: 'Edit Proxies',
-    editSourceFile: 'Edit Proxies(Source)',
+      enterLink: 'Enter subscription link',
+      proxyCount: 'Proxy Count',
+      updateDirect: 'Update directly',
+      updateSystemProxy: 'Update via system proxy',
+      updateKernelProxy: 'Update via core proxy',
+      editProxies: 'Edit Proxies',
+      editSourceFile: 'Edit Proxies(Source)',
     copySub: 'Copy Link',
     script: 'Script',
     attachGuide: {
@@ -808,6 +811,14 @@ export default {
     reloadTimeout: 'The reload timed out. Do you want to force reload?',
     reloadError:
       'An error occurred during reload. Do you want to force reload?\n\nReason: {reason}',
+  },
+  diagnostics: {
+    fatalError: 'A serious error occurred. Please send it to the developer.',
+    unexpectedKernelExit: 'The core exited unexpectedly.',
+    reason: 'Reason: {reason}',
+    bundleReady: 'Diagnostic bundle created: {path}',
+    openBundle: 'Open the diagnostic directory now?',
+    shareBundle: 'Please include this directory when reporting the issue.',
   },
   outbound: {
     select: '🚀 Select',

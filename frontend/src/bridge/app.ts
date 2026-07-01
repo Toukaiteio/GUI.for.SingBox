@@ -11,6 +11,13 @@ interface NotificationOptions {
   data?: Record<string, any>
 }
 
+interface DiagnosticCaptureOptions {
+  Category?: string
+  Label?: string
+  Metadata?: Record<string, string>
+  LogFiles?: string[]
+}
+
 const getRuntime = () => (window as any).runtime as Record<string, (...args: any[]) => any>
 
 export const IsNotificationAvailable = (): Promise<boolean> => {
@@ -52,6 +59,19 @@ export const GetEnv = <T extends string | undefined = undefined>(
 }
 
 export const IsStartup = App.IsStartup
+
+export const CaptureDiagnosticSnapshot = async (options: DiagnosticCaptureOptions = {}) => {
+  const { flag, data } = await (window as any).go.bridge.App.CaptureDiagnosticSnapshot({
+    Category: options.Category ?? '',
+    Label: options.Label ?? '',
+    Metadata: options.Metadata ?? {},
+    LogFiles: options.LogFiles ?? [],
+  })
+  if (!flag) {
+    throw data
+  }
+  return data
+}
 
 export const GetInterfaces = async () => {
   const { flag, data } = await App.GetInterfaces()

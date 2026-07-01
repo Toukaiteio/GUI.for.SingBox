@@ -11,6 +11,7 @@ import {
   onTraffic,
   initWebsocket,
   destroyWebsocket,
+  probeApiAvailability,
 } from '@/api/kernel'
 import { ProcessInfo, KillProcess, ExecBackground, ReadFile, RemoveFile, FileExists } from '@/bridge'
 import {
@@ -23,6 +24,7 @@ import {
 import { DefaultInboundHttp, DefaultInboundMixed, DefaultInboundSocks } from '@/constant/profile'
 import { Branch } from '@/enums/app'
 import { Inbound, RulesetType, TunStack } from '@/enums/kernel'
+import i18n from '@/lang'
 import {
   useAppSettingsStore,
   useProfilesStore,
@@ -43,6 +45,10 @@ import {
   getKernelRuntimeArgs,
   getKernelRuntimeEnv,
   eventBus,
+  collectDiagnosticSnapshot,
+  confirm,
+  openDiagnosticDirectory,
+  sleep,
 } from '@/utils'
 
 import type { CoreApiConfig, CoreApiProxy } from '@/types/kernel'
@@ -304,55 +310,74 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
   const needRestart = ref(false)
   const coreStateLoading = ref(true)
   let isCoreStartedByThisInstance = false
+  let startCorePromise: Promise<void> | null = null
+  let expectedStop = false
+  let unexpectedStopNotifying = false
   let { promise: coreStoppedPromise, resolve: coreStoppedResolver } = Promise.withResolvers()
 
   const initCoreState = async (options: { autoStart?: boolean } = {}) => {
     const { autoStart = true } = options
-    corePid.value = Number(await ReadFile(CorePidFilePath).catch(() => -1))
-    const processName = corePid.value === -1 ? '' : await ProcessInfo(corePid.value).catch(() => '')
-    running.value = processName.startsWith('sing-box')
+    coreStateLoading.value = true
 
-    coreStateLoading.value = false
+    try {
+      corePid.value = Number(await ReadFile(CorePidFilePath).catch(() => -1))
+      const processName = corePid.value === -1 ? '' : await ProcessInfo(corePid.value).catch(() => '')
+      running.value = processName.startsWith('sing-box')
 
-    if (running.value) {
-      initWebsocket()
-      await Promise.all([refreshConfig(), refreshProviderProxies()])
-      await envStore.updateSystemProxyStatus()
-    } else if (autoStart && appSettingsStore.app.autoStartKernel) {
-      const isAlpha = appSettingsStore.app.kernel.branch === Branch.Alpha
-      const coreInstalled = await FileExists(
-        `${CoreWorkingDirectory}/${getKernelFileName(isAlpha)}`,
-      ).catch(() => false)
-      if (!coreInstalled) return
-      await startCore()
+      if (running.value) {
+        initWebsocket()
+        await Promise.all([refreshConfig(), refreshProviderProxies()])
+        await envStore.updateSystemProxyStatus()
+      } else if (autoStart && appSettingsStore.app.autoStartKernel) {
+        const isAlpha = appSettingsStore.app.kernel.branch === Branch.Alpha
+        const coreInstalled = await FileExists(
+          `${CoreWorkingDirectory}/${getKernelFileName(isAlpha)}`,
+        ).catch(() => false)
+        if (!coreInstalled) return
+        await startCore()
+      }
+    } finally {
+      coreStateLoading.value = false
     }
   }
 
-  const runCoreProcess = (isAlpha: boolean) => {
-    return new Promise<number | void>((resolve, reject) => {
-      let output: string
-      const pid = ExecBackground(
-        CoreWorkingDirectory + '/' + getKernelFileName(isAlpha),
-        getKernelRuntimeArgs(isAlpha),
-        (out) => {
-          output = out
-          logsStore.recordKernelLog(out)
-          if (out.includes(CoreStopOutputKeyword)) {
-            resolve(pid)
-          }
-        },
-        () => {
-          onCoreStopped()
-          reject(output)
-        },
-        {
-          PidFile: CorePidFilePath,
-          LogFile: CoreLogFilePath,
-          StopOutputKeyword: CoreStopOutputKeyword,
-          Env: getKernelRuntimeEnv(isAlpha),
-        },
-      ).catch((e) => reject(e))
-    })
+  const runCoreProcess = async (isAlpha: boolean) => {
+    let output = ''
+    let stopped = false
+    let stopReason = ''
+
+    const pid = await ExecBackground(
+      CoreWorkingDirectory + '/' + getKernelFileName(isAlpha),
+      getKernelRuntimeArgs(isAlpha),
+      (out) => {
+        output = out
+        logsStore.recordKernelLog(out)
+      },
+      async (reason) => {
+        stopped = true
+        stopReason = reason || output
+        await onCoreStopped({
+          expected: expectedStop,
+          reason: stopReason,
+        })
+      },
+      {
+        PidFile: CorePidFilePath,
+        LogFile: CoreLogFilePath,
+        StopOutputKeyword: CoreStopOutputKeyword,
+        Env: getKernelRuntimeEnv(isAlpha),
+      },
+    )
+
+    while (!stopped) {
+      const ok = await probeApiAvailability().catch(() => false)
+      if (ok) {
+        return pid
+      }
+      await sleep(500)
+    }
+
+    throw stopReason || 'Startup failed. Check logs for details.'
   }
 
   const onCoreStarted = async (pid: number) => {
@@ -360,6 +385,7 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     running.value = true
     needRestart.value = false
     isCoreStartedByThisInstance = true
+    expectedStop = false
     coreStoppedPromise = new Promise((r) => (coreStoppedResolver = r))
 
     initWebsocket()
@@ -377,7 +403,50 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     await pluginsStore.onCoreStartedTrigger()
   }
 
-  const onCoreStopped = async () => {
+  const notifyUnexpectedStop = async (reason: string) => {
+    if (unexpectedStopNotifying) return
+    unexpectedStopNotifying = true
+
+    try {
+      const { t } = i18n.global
+      const diagnosticsPath = await collectDiagnosticSnapshot('kernel', 'unexpected-stop', {
+        reason,
+        running: running.value,
+        starting: starting.value,
+        stopping: stopping.value,
+        restarting: restarting.value,
+      }).catch(() => '')
+
+      const parts = [
+        t('diagnostics.unexpectedKernelExit'),
+        '',
+        t('diagnostics.reason', { reason: reason || 'unknown' }),
+      ]
+
+      if (diagnosticsPath) {
+        parts.push('', t('diagnostics.bundleReady', { path: diagnosticsPath }))
+        parts.push(t('diagnostics.shareBundle'))
+      }
+
+      parts.push('', t('diagnostics.openBundle'))
+
+      const confirmed = await confirm(
+        'common.warning',
+        parts.join('\n'),
+      ).catch(() => 0)
+
+      if (confirmed && diagnosticsPath) {
+        await openDiagnosticDirectory(diagnosticsPath).catch((err) => message.error(err))
+      }
+    } finally {
+      unexpectedStopNotifying = false
+    }
+  }
+
+  const onCoreStopped = async (options: { expected?: boolean; reason?: string } = {}) => {
+    const { expected = false, reason = '' } = options
+    expectedStop = false
+
     if (!isCoreStartedByThisInstance) {
       await RemoveFile(CorePidFilePath)
     }
@@ -386,41 +455,77 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     running.value = false
     needRestart.value = false
 
-    resetConfig()
     destroyWebsocket()
 
     await envStore.updateSystemProxyStatus()
     if (envStore.systemProxy) {
       await envStore.clearSystemProxy()
     }
+    resetConfig()
     await pluginsStore.onCoreStoppedTrigger()
 
     coreStoppedResolver(null)
+
+    const normalizedReason = String(reason || '').trim()
+    if (!expected && isCoreStartedByThisInstance) {
+      await notifyUnexpectedStop(normalizedReason)
+    }
+
+    isCoreStartedByThisInstance = false
   }
 
   const startCore = async (_profile?: IProfile) => {
     if (running.value) throw 'The core is already running'
+    if (startCorePromise) return startCorePromise
 
-    logsStore.clearKernelLog()
+    startCorePromise = (async () => {
+      logsStore.clearKernelLog()
 
-    const { profile: profileID, branch } = appSettingsStore.app.kernel
-    const profile = _profile || profilesStore.getProfileById(profileID)
-    if (!profile) throw 'Choose a profile first'
+      const { profile: profileID, branch } = appSettingsStore.app.kernel
+      const profile = _profile || profilesStore.getProfileById(profileID)
+      if (!profile) throw 'Choose a profile first'
 
-    if (!_profile) {
-      runtimeProfile = undefined
-    }
+      if (!_profile) {
+        runtimeProfile = undefined
+      }
 
-    starting.value = true
+      starting.value = true
+      try {
+        await generateConfigFile(profile, (config) =>
+          pluginsStore.onBeforeCoreStartTrigger(config, profile),
+        )
+        const isAlpha = branch === Branch.Alpha
+        const pid = await runCoreProcess(isAlpha)
+        pid && (await onCoreStarted(pid))
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        const { t } = i18n.global
+        const diagnosticsPath = await collectDiagnosticSnapshot('kernel', 'startup-failed', {
+          reason,
+          branch,
+          profileId: profile.id,
+          profileName: profile.name,
+        }).catch(() => '')
+
+        if (diagnosticsPath) {
+          throw [
+            reason,
+            '',
+            t('diagnostics.bundleReady', { path: diagnosticsPath }),
+            t('diagnostics.shareBundle'),
+          ].join('\n')
+        }
+
+        throw error
+      } finally {
+        starting.value = false
+      }
+    })()
+
     try {
-      await generateConfigFile(profile, (config) =>
-        pluginsStore.onBeforeCoreStartTrigger(config, profile),
-      )
-      const isAlpha = branch === Branch.Alpha
-      const pid = await runCoreProcess(isAlpha)
-      pid && (await onCoreStarted(pid))
+      await startCorePromise
     } finally {
-      starting.value = false
+      startCorePromise = null
     }
   }
 
@@ -428,12 +533,14 @@ export const useKernelApiStore = defineStore('kernelApi', () => {
     if (!running.value) throw 'The core is not running'
 
     stopping.value = true
+    expectedStop = true
     try {
       await pluginsStore.onBeforeCoreStopTrigger()
       await KillProcess(corePid.value)
       await (isCoreStartedByThisInstance ? coreStoppedPromise : onCoreStopped())
     } finally {
       stopping.value = false
+      expectedStop = false
     }
   }
 

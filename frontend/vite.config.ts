@@ -7,6 +7,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: './',
   plugins: [vue()],
+  server: {
+    watch: {
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/src/bridge/wailsjs/**'],
+    },
+  },
   resolve: {
     extensions: ['.ts', '.js'],
     alias: {
@@ -20,6 +25,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 4096, // 4MB
     rolldownOptions: {
       output: {
+        strictExecutionOrder: true,
         codeSplitting: {
           groups: [
             { name: 'vue', test: /node_modules\/vue/ },

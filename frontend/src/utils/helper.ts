@@ -213,6 +213,15 @@ async function setDarwinSystemProxy(
 
     const httpState = ['mixed', 'http'].includes(proxyType) ? state : 'off'
     const socksState = ['mixed', 'socks'].includes(proxyType) ? state : 'off'
+    let bypassItems = bypass
+      .split(';')
+      .map((v) => v.trim())
+      .filter(Boolean)
+
+    // macOS networksetup requires at least one bypass domain argument.
+    if (bypassItems.length === 0) {
+      bypassItems = ['Empty']
+    }
 
     const p1 = ignoredError(Exec, 'networksetup', ['-setwebproxystate', device, httpState])
     const p2 = ignoredError(Exec, 'networksetup', ['-setsecurewebproxystate', device, httpState])
@@ -224,10 +233,7 @@ async function setDarwinSystemProxy(
     const p4 = ignoredError(Exec, 'networksetup', [
       '-setproxybypassdomains',
       device,
-      ...bypass
-        .split(';')
-        .map((v) => v.trim())
-        .filter(Boolean),
+      ...bypassItems,
     ])
 
     const [serverName, serverPort] = server.split(':') as [string, string]

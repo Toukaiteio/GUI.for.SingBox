@@ -7,6 +7,7 @@ import './assets/globalMethods'
 import App from './App.vue'
 import components from './components'
 import directives from './directives'
+import { installFatalDiagnostics } from './hooks/useFatalDiagnostics'
 import i18n from './lang'
 import router from './router'
 import { setAppContext } from './utils'
@@ -14,6 +15,7 @@ import { setAppContext } from './utils'
 const app = createApp(App)
 
 setAppContext(app)
+installFatalDiagnostics(app)
 
 app.use(createPinia())
 app.use(router)

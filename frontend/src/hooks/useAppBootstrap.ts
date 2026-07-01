@@ -4,7 +4,7 @@ import { FileExists, IsStartup } from '@/bridge'
 import CoreInstallPrompt from '@/components/_common/CoreInstallPrompt.vue'
 import { CoreWorkingDirectory } from '@/constant/kernel'
 import * as Stores from '@/stores'
-import { getKernelFileName, message, modal, sleep } from '@/utils'
+import { collectDiagnosticSnapshot, getKernelFileName, message, modal, sleep } from '@/utils'
 
 const MIN_SPLASH_DURATION = 1000
 
@@ -27,6 +27,9 @@ export const useAppBootstrap = () => {
 
   const showError = (error: unknown) => {
     hasError.value = true
+    collectDiagnosticSnapshot('bootstrap', 'initialize-failed', {
+      reason: error instanceof Error ? error.message : String(error),
+    }).catch(() => {})
     message.error(error)
   }
 
@@ -109,7 +112,7 @@ export const useAppBootstrap = () => {
 
     loading.value = false
     const coreInstalled = await showCoreInstallPrompt()
-    kernelApiStore.initCoreState({ autoStart: coreInstalled })
+    await kernelApiStore.initCoreState({ autoStart: coreInstalled })
   }
 
   initialize().catch(showError)
